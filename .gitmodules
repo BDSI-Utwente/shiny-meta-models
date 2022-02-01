@@ -1,0 +1,3 @@
+[submodule "pacheck"]
+	path = pacheck
+	url = https://github.com/Xa4P/pacheck.git
