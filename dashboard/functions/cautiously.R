@@ -1,15 +1,14 @@
 library(purrr)
-library(magrittr)
 library(glue)
 library(htmltools)
 
 
-#' Cautiously 
-#' 
+#' Cautiously
+#'
 #' Combines \link{purrr}'s safely and cautiously, returning a function that calls ` .f`,
-#' and returns a list containing ` result`, ` error`, `warning` , ` message`, and ` output`. 
-#' 
-#' If an error occurs while calling `.f`, `result` will be `NULL`, otherwise `error` will be `NULL` 
+#' and returns a list containing ` result`, ` error`, `warning` , ` message`, and ` output`.
+#'
+#' If an error occurs while calling `.f`, `result` will be `NULL`, otherwise `error` will be `NULL`
 #' @param .f function to wrap
 cautiously <- function(.f) {
   f <- quietly(safely(.f))
@@ -17,8 +16,8 @@ cautiously <- function(.f) {
   function(...) {
     result <- f(...)
     result$error <- result$result$error
-    result$warnings <- result$warnings %>% discard(~!is.null(.x) && .x != "")
-    result$messages <- result$messages %>% discard(~!is.null(.x) && .x != "")
+    result$warnings <- result$warnings %>% discard(~ !is.null(.x) && .x != "")
+    result$messages <- result$messages %>% discard(~ !is.null(.x) && .x != "")
     result$result <- result$result$result
     structure(result, class = c("list", "cautious"))
   }
@@ -56,5 +55,5 @@ print.cautious <- function(.x, ...) {
 }
 
 .collapse <- function(messages) {
-  paste0(messages %>% discard(~is.null(.x) || .x == ""), sep = "", collapse = "\n")
+  paste0(messages %>% discard(~ is.null(.x) || .x == ""), sep = "", collapse = "\n")
 }
