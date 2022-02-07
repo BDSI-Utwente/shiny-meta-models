@@ -1,5 +1,5 @@
 library(shiny)
-library(shinydashboard)
+library(bs4Dash)
 library(tidyverse)
 library(DT)
 library(pacheck)
@@ -16,7 +16,6 @@ dataUI <- tabItem(
   "data",
   box(
     title = "Upload data",
-    status = "primary",
     width = 12,
     fileInput("model_file",
       "Model file",
@@ -54,7 +53,6 @@ dataUI <- tabItem(
   # categorize variables
   box(
     title = "Categorize variables",
-    status = "primary",
     width = 12,
     p(
       class = "text-muted",
@@ -81,7 +79,6 @@ dataUI <- tabItem(
   # calculate net benefits
   box(
     title = "Calculate net benefits",
-    status = "primary",
     width = 12,
     span(
       class = "text-muted",
@@ -117,11 +114,13 @@ dataUI <- tabItem(
         )
       )
     ),
+    div(class = "callout callout-warning", "TODO: Not yet implemented"),
     actionButton(
       "calculate-net-benefits",
       "Calculate net benefits",
       icon("calculator"),
-      class = "btn-primary"
+      status = "primary",
+      disabled = TRUE
     )
   ),
 
@@ -129,29 +128,48 @@ dataUI <- tabItem(
   box(
     title = "Data Preview",
     width = 12,
-    dataTableOutput("modelPreview")
+    div(
+      style = "overflow: auto;",
+      dataTableOutput("modelPreview")
+    )
   )
 )
 
-dataServer <- function(input, output, session) {
+dataServer <- function(input, output, session, context) {
   # upload data -------------------------------------------------------------
-  modelFile <- reactiveValues(
+  context$modelFile <- reactiveValues(
     status = NULL,
     initialized = FALSE
   )
-  modelData <- reactiveVal()
-  modelVariables <- reactive({
-    names(modelData())
-  })
-  scenarios <- reactive({
-    if (modelFile$initialized &&
-      input$`scenario-variable` != "" &&
-      (input$`scenario-variable` %in% modelVariables())) {
-      modelData() %>%
-        pull(!!input$`scenario-variable`) %>%
-        unique()
+  context$modelData <- reactiveVal()
+  context$filteredModelData <- reactive({
+    if (scenarioValid()) {
+      return(context$modelData() %>% filter(.data[[input$`scenario-variable`]] == input$scenario))
     } else {
-      c()
+      return(context$modelData())
+    }
+  }) %>% bindEvent(scenarioValid(), context$modelData(), input$scenario, input$`scenario-variable`)
+  context$modelVariables <- reactive({
+    names(context$modelData())
+  })
+  scenarioVariableValid <- reactive({
+    input$`scenario-variable` != "" &&
+      input$`scenario-variable` %in% context$modelVariables()
+  })
+  scenarioValid <- reactive({
+    scenarioVariableValid() &&
+      input$scenario != "" &&
+      input$scenario != "none" &&
+      input$scenario %in% scenarios()
+  })
+  context$scenarios <- reactive({
+    if (scenarioVariableValid()) {
+      context$modelData() %>%
+        pull(!!input$`scenario-variable`) %>%
+        unique() %>%
+        c(None = "", None = "none", .)
+    } else {
+      c(None = "")
     }
   })
 
@@ -165,8 +183,8 @@ dataServer <- function(input, output, session) {
 
     result <- safeRead(path, show_col_types = FALSE)
 
-    modelFile$message <- as.character(result)
-    if (modelFile$message == "") {
+    context$modelFile$message <- as.character(result)
+    if (context$modelFile$message == "") {
       print("success")
       shinyWidgets::show_toast(
         glue::glue("Succesfully loaded '{name}'", name = file),
@@ -178,17 +196,17 @@ dataServer <- function(input, output, session) {
     }
 
     if (!is.null(result$error)) {
-      modelData(NULL)
+      context$modelData(NULL)
       shinyWidgets::show_toast(
         glue::glue("Error loading '{name}'", name = file),
         result$message,
         "error"
       )
-      modelFile$initialized <- FALSE
+      context$modelFile$initialized <- FALSE
     } else {
-      modelData(result$result)
-      if (modelFile$warnings %>% length() > 0) {
-        modelFile$status <- "warning"
+      context$modelData(result$result)
+      if (context$modelFile$warnings %>% length() > 0) {
+        context$modelFile$status <- "warning"
         shinyWidgets::show_toast(
           glue::glue("Loaded '{name}' with warnings", name = file),
           glue::glue("{rows} observations of {cols} variables. \n\n{warnings}",
@@ -197,7 +215,7 @@ dataServer <- function(input, output, session) {
           "warning"
         )
       } else {
-        modelFile$status <- "success"
+        context$modelFile$status <- "success"
         shinyWidgets::show_toast(
           glue::glue("Successfully loaded '{name}'", name = file),
           glue::glue("{rows} observations of {cols} variables. \n\n{message}",
@@ -206,7 +224,7 @@ dataServer <- function(input, output, session) {
           "success"
         )
       }
-      modelFile$initialized <- TRUE
+      context$modelFile$initialized <- TRUE
     }
   }) %>%
     bindEvent(input$model_file)
@@ -216,40 +234,50 @@ dataServer <- function(input, output, session) {
     dataSetName <- data(df_pa, envir = env)
     get(dataSetName, envir = env) %>%
       tibble() %>%
-      modelData()
-    modelFile$status <- "success"
+      context$modelData()
+    context$modelFile$status <- "success"
+    context$modelFile$initialized <- TRUE
     shinyWidgets::show_toast(
       glue::glue("Successfully loaded test data."),
       glue::glue("{rows} observations of {cols} variables.",
-        rows = nrow(modelData()), cols = ncol(modelData())
-      )
+        rows = nrow(context$modelData()), cols = ncol(context$modelData())
+      ),
+      type = "success"
     )
-  }) %>%
-    bindEvent(input$model_file_example)
+  }) %>% bindEvent(input$model_file_example)
 
   updateSelectizeChoices <- observe({
-    if (!modelFile$initialized) {
-      return()
-    }
+    updateSelectizeInput(session, "cost-variables", choices = context$modelVariables())
+    updateSelectizeInput(session, "utility-variables", choices = context$modelVariables())
+    updateSelectizeInput(session, "probability-variables", choices = context$modelVariables())
+    updateSelectizeInput(session, "scenario-variable", choices = c(None = "none", context$modelVariables()))
+  }) %>% bindEvent(context$modelVariables())
 
-    print("updating")
+  updateTotalCostChoices <- observe({
+    updateSelectizeInput(session,
+      "total-cost-variable-control",
+      choices = c("", input$`cost-variables`, context$modelVariables())
+    )
+    updateSelectizeInput(session,
+      "total-cost-variable-experimental",
+      choices = c("", input$`cost-variables`, context$modelVariables())
+    )
+  }) %>% bindEvent(input$`cost-variables`, context$modelVariables())
 
-    # categorize
-    updateSelectizeInput(session, "cost-variables", choices = modelVariables())
-    updateSelectizeInput(session, "utility-variables", choices = modelVariables())
-    updateSelectizeInput(session, "probability-variables", choices = modelVariables())
-    updateSelectizeInput(session, "scenario-variable", choices = modelVariables())
-
-    # net benefits
-    updateSelectizeInput(session, "total-costs-variable-control", choices = modelVariables())
-    updateSelectizeInput(session, "total-costs-variable-experimental", choices = modelVariables())
-    updateSelectizeInput(session, "total-utility-variable-control", choices = modelVariables())
-    updateSelectizeInput(session, "total-utility-variable-control", choices = modelVariables())
-  }) %>% bindEvent(modelData(), ignoreNULL = FALSE, ignoreInit = TRUE)
+  updateTotalUtilityChoices <- observe({
+    updateSelectizeInput(session,
+      "total-utility-variable-control",
+      choices = c("", input$`utility-variables`, context$modelVariables())
+    )
+    updateSelectizeInput(session,
+      "total-utility-variable-experimental",
+      choices = c("", input$`utility-variables`, context$modelVariables())
+    )
+  }) %>% bindEvent(input$`utility-variables`, context$modelVariables())
 
   updateScenarioChoices <- observe({
-    updateSelectizeInput(session, "scenario", choices = scenarios())
-  }) %>% bindEvent(scenarios(), ignoreNULL = FALSE, ignoreInit = TRUE)
+    updateSelectizeInput(session, "scenario", choices = context$scenarios())
+  }) %>% bindEvent(context$scenarios(), ignoreNULL = FALSE)
 
-  output$modelPreview <- renderDataTable(modelData())
+  output$modelPreview <- renderDataTable(context$filteredModelData())
 }

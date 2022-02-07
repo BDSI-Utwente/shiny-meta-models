@@ -1,0 +1,60 @@
+# ToDo list for PACHBOARD
+
+- [ ] Welcome
+    - [ ] Introduction
+    - [ ] Instructions
+- [ ] Data
+    - [x] Upload file
+        - [x] CSV
+        - [ ] Excel
+        - [ ] RData
+        - [ ] rds
+    - [x] Use test data (df_pa)
+    - [x] Categorize variables
+        - [x] Costs
+        - [x] Utility
+        - [x] Probability
+        - [x] Scenario
+    - [x] Select total cost, utility for exp and ctrl
+    - [x] Select scenario
+        - [x] Select variable
+        - [x] Filter data
+- Investigate (Summary)
+    - [x] Summary statistics (min/max/etc)
+    - [x] Correlation matrix
+    - [ ] Data checks
+        - [ ] variable name in message
+        - [ ] check/cross icon before message
+        - [x] utility in [0,1]
+        - [x] probability in (0,1]
+        - [x] costs positive
+        - [ ] sum of probabilies <=1, =1
+            - TODO: check with Xavier
+        - [ ] discounted/undiscounted results
+            - TODO: check with Xavier
+    - [ ] Distribution plots
+        - [ ] Single parameter
+            - [ ] type: histogram / density
+            - [ ] dist: norm, beta, gamma, lnorm
+        - [ ] Two parameters
+            - TODO: check with Xavier
+    - [ ] Fit distributions
+        - [ ] norm, beta, gamma, lnorm
+    - [ ] Fit and compare to user distributions
+        - [ ] norm, beta, gamma, lnorm,
+        - [ ] params
+        - [ ] user_mean
+            - TODO: check with Xavier
+- Model outcomes / outputs
+    - [ ] incremental cost-effectiveness plane
+        - see `shiny::runGitHub("Teaching", "Xa4P", subdir = "Basics/shiny_app_cea/", ref = "main")`
+    - [ ] cost-effectiveness acceptability curve
+    - [ ] distribution of total and incremental costs and effects
+    - [ ] convergence graph of outcomes
+    - [ ] check mean QoL outcome range
+- Relations
+    - [ ] Single regression
+    - [ ] Multiple regression
+    - [ ] Stretch: Non-linear models
+- Predictions
+    - [ ] predictions for user inputs

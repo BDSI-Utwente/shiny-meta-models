@@ -1,27 +1,13 @@
-
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
 library(shiny)
-library(shinydashboard)
 library(tidyverse)
 
-source("./0-welcome.R")
-source("./1-data.R")
-source("./2-summary.R")
-source("./3-outcomes.R")
-source("./4-relations.R")
-source("./5-predictions.R")
-
-test_data <- data(df_pa)
-
 ui <- dashboardPage(
-  dashboardHeader(title = "PACHBOARD"),
+  title = "PACHBOARD",
+  dark = FALSE,
+  dashboardHeader(
+    title = "PACHBOARD",
+    actionButton("setup-test-data", "Use test data", status = "info", size = "sm", class = "ml-auto mr-0")
+  ),
   dashboardSidebar(
     sidebarMenu(
       menuItem(
@@ -33,13 +19,13 @@ ui <- dashboardPage(
       menuItem(
         "Prepare data",
         tabName = "data",
-        icon = icon("upload"),
-        selected = TRUE
+        icon = icon("upload")
       ),
       menuItem(
         "Summary statistics",
         tabName = "summary",
-        icon = icon("search")
+        icon = icon("search"),
+        selected = TRUE
       ),
       menuItem(
         "Model outcomes",
@@ -62,8 +48,23 @@ ui <- dashboardPage(
 )
 
 server <- function(input, output, session) {
-  dataServer(input, output, session)
-  summaryServer(input, output, session)
+  context <- environment()
+  dataServer(input, output, session, context)
+  summaryServer(input, output, session, context)
+
+  observe({
+    env <- environment()
+    dataSetName <- data(df_pa, envir = env)
+    get(dataSetName, envir = env) %>%
+      tibble() %>%
+      context$modelData()
+    context$modelFile$status <- "success"
+    context$modelFile$initialized <- TRUE
+
+    updateSelectizeInput(session, "cost-variables", selected = modelData() %>% select(starts_with("c_"), contains("cost")) %>% names())
+    updateSelectizeInput(session, "utility-variables", selected = modelData() %>% select(starts_with("u_"), contains("qaly")) %>% names())
+    updateSelectizeInput(session, "probability-variables", selected = modelData() %>% select(starts_with("p_")) %>% names())
+  }) %>% bindEvent(input$`setup-test-data`)
 }
 
 # Run the application
