@@ -61,6 +61,7 @@ dataUI <- tabItem(
     selectizeInput("cost-variables", "Costs", choices = c("loading..."), multiple = TRUE),
     selectizeInput("utility-variables", "Utilities", choices = c("loading..."), multiple = TRUE),
     selectizeInput("probability-variables", "Probabilities", choices = c("loading..."), multiple = TRUE),
+    selectizeInput("rel_effectiveness-variables", "Relative effectiveness (RR, OR, HR)", choices = c("loading..."), multiple = TRUE),
     p(
       class = "text-muted",
       "If there are multiple scenarios, please select the variable that identifies the scenario."
