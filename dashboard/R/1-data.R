@@ -91,12 +91,12 @@ dataUI <- tabItem(
         h4("Total costs"),
         selectizeInput(
           "total-cost-variable-control",
-          "Control",
+          "Comparator",
           choices = c("loading...")
         ),
         selectizeInput(
           "total-cost-variable-experimental",
-          "Experimental",
+          "Intervention",
           choices = c("loading...")
         )
       ),
@@ -105,12 +105,12 @@ dataUI <- tabItem(
         h4("Total utility"),
         selectizeInput(
           "total-utility-variable-control",
-          "Control",
+          "Comparator",
           choices = c("loading...")
         ),
         selectizeInput(
           "total-utility-variable-experimental",
-          "Experimental",
+          "Intervention",
           choices = c("loading...")
         )
       )
