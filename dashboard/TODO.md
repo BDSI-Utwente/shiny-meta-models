@@ -1,8 +1,8 @@
 # ToDo list for PACHBOARD
 
 - [ ] Welcome
-    - [ ] Introduction
-    - [ ] Instructions
+    - [x] Introduction
+    - [x] Instructions
 - [ ] Data
     - [x] Upload file
         - [x] CSV
@@ -14,12 +14,15 @@
         - [x] Costs
         - [x] Utility
         - [x] Probability
+        - [x] Relative effectiveness
         - [x] Scenario
     - [x] Select total cost, utility for exp and ctrl
     - [x] Select scenario
         - [x] Select variable
         - [x] Filter data
 - Investigate (Summary)
+    - [ ] "Add all" button
+    - [x] "Add x" should be additive
     - [x] Summary statistics (min/max/etc)
     - [x] Correlation matrix
     - [ ] Data checks
@@ -28,33 +31,53 @@
         - [x] utility in [0,1]
         - [x] probability in (0,1]
         - [x] costs positive
-        - [ ] sum of probabilies <=1, =1
-            - TODO: check with Xavier
+        - [ ] sum of probabilities <=1, =1
+            - [ ] filter to probs
+            - [ ] add new box to deal with sets of probability and complement/alternatives
         - [ ] discounted/undiscounted results
-            - TODO: check with Xavier
+            <!-- - [ ] filter to outcomes -->
+            - [ ] add new box to deal with sets of (un)discounted results
+        - [ ] check mean QoL outcome range  
     - [ ] Distribution plots
-        - [ ] Single parameter
-            - [ ] type: histogram / density
-            - [ ] dist: norm, beta, gamma, lnorm
+        - [~] Single parameter
+            - [x] type: histogram / density
+            - [x] dist: norm, beta, gamma, lnorm
+            - [x] Fit distributions
+                - [x] norm, beta, gamma, lnorm
+            - [x] Fit and compare to user distributions
+                - [x] norm, beta, gamma, lnorm,
+                - [x] params
+                - [ ] user_mean
+                    - TODO: @Xa4P what does this mean? Where is it used?
+            - [x] Graph resultaat van vis_1_param(): graag daarbij (rechts ervan bijvoorbeeld) de twee dataframes die het resultaat zijn van fit_dist() plaatsen (dus dat het   uitvoeren van deze twee functies samen getriggerd wordt). De `df`, `param`, `dist` argumenten van deze functies zij namelijk hetzelfde en kunnen dus gebruikt worden voor het uitvoeren van beide functies.
+                - @Xa4P I collapsed the two tables - also for some reason I only get AIC, no BIC or the difficult name one.
         - [ ] Two parameters
-            - TODO: check with Xavier
-    - [ ] Fit distributions
-        - [ ] norm, beta, gamma, lnorm
-    - [ ] Fit and compare to user distributions
-        - [ ] norm, beta, gamma, lnorm,
-        - [ ] params
-        - [ ] user_mean
-            - TODO: check with Xavier
+            - [ ] add test x > y
+
 - Model outcomes / outputs
-    - [ ] incremental cost-effectiveness plane
+    - [ ] Move net benefits here
+    - [ ] incremental cost-effectiveness (ICE) plane
+        - inputs based on net benefits box
+        - [ ] Hover: laat de inhoud zien van de rijd van de dataframe die het dichtste bij de muis is
+        - [ ] Brush summary stats van de geselecteerde rijen door gebruik van generate_sum_stats() functie --> optioneel: link de brush met een andere plot waar 1 of 2 input waarde geplot zijn.
         - see `shiny::runGitHub("Teaching", "Xa4P", subdir = "Basics/shiny_app_cea/", ref = "main")`
-    - [ ] cost-effectiveness acceptability curve
-    - [ ] distribution of total and incremental costs and effects
+        - pacheck::plot_ice, summary_ice
+        - [ ] fancy: add histograms on axes
+    - [ ] cost-effectiveness acceptability curve (CEAC)
+        - inputs based on net benefits box
+        - [ ] calculate_ceac, plot_ceac
     - [ ] convergence graph of outcomes
-    - [ ] check mean QoL outcome range
+        - plot_convergence
+        - [ ] block_size, conv_limit adjustable
 - Relations
-    - [ ] Single regression
-    - [ ] Multiple regression
-    - [ ] Stretch: Non-linear models
+    - [ ] Linear Models
+        - [ ] Select outcome (single)
+        - [ ] Select inputs
+            - [ ] Add grouped buttons (see categories)
+    - [ ] Deterministic Sensitivity Analysis
+        - inputs from linear model
 - Predictions
+    - variables from LM
     - [ ] predictions for user inputs
+        - [ ] user
+    - [ ] chapley values plot?

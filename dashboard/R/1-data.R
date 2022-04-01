@@ -155,42 +155,58 @@ dataUI <- tabItem(
 )
 
 dataServer <- function(input, output, session, context) {
+  context$model <- reactiveValues(
+    file = reactiveValues(
+      status = NULL,
+      initialized = FALSE
+    ),
+    variables = c(),
+    cost_variables = c(),
+    utility_variables = c(),
+    probability_variables = c(),
+    relative_effect_variables = c(),
+    scenario_variable = "", 
+    scenarios = c(),
+    scenario = ""
+  )
+  
   # upload data -------------------------------------------------------------
-  context$modelFile <- reactiveValues(status = NULL,
+  context$model$file <- reactiveValues(status = NULL,
                                       initialized = FALSE)
-  context$modelData <- reactiveVal()
-  context$filteredModelData <- reactive({
+  
+  context$model$data_filtered <- reactive({
     if (scenarioValid()) {
-      return(context$modelData() %>% filter(.data[[input$`scenario-variable`]] == input$scenario))
+      return(context$model$data %>% filter(.data[[context$model$scenario_variable]] == input$scenario))
     } else {
-      return(context$modelData())
+      return(context$model$data)
     }
-  }) %>% bindEvent(scenarioValid(),
-                   context$modelData(),
-                   input$scenario,
-                   input$`scenario-variable`)
-  context$modelVariables <- reactive({
-    names(context$modelData())
-  })
+  }) %>% bindEvent(scenarioValid(), context$model$data)
+  
   scenarioVariableValid <- reactive({
-    input$`scenario-variable` != "" &&
-      input$`scenario-variable` %in% context$modelVariables()
+    context$model$scenario_variable != "" &&
+      context$model$scenario_variable %in% context$model$variables
   })
+  
+  updateScenario <- observe({
+    context$model$scenario <- input$scenario  
+  }) %>% bindEvent(input$scenario)
+  
+  updateScenarios <- observe({
+    if(scenarioVariableValid()) {
+      context$model$scenarios <- 
+        context$model$data %>% 
+        pull(!!context$model$scenario_variable) %>%
+        unique() %>% c(None = "", None = "none", .)
+    } else {
+      context$model$scenarios <- c(None = "")
+    }
+  })
+  
   scenarioValid <- reactive({
     scenarioVariableValid() &&
-      input$scenario != "" &&
-      input$scenario != "none" &&
-      input$scenario %in% context$scenarios()
-  })
-  context$scenarios <- reactive({
-    if (scenarioVariableValid()) {
-      context$modelData() %>%
-        pull(!!input$`scenario-variable`) %>%
-        unique() %>%
-        c(None = "", None = "none", .)
-    } else {
-      c(None = "")
-    }
+      context$model$scenario != "" &&
+      context$model$scenario != "none" &&
+      context$model$scenario %in% context$model$scenarios
   })
   
   loadData <- observe({
@@ -203,8 +219,8 @@ dataServer <- function(input, output, session, context) {
     
     result <- safeRead(path, show_col_types = FALSE)
     
-    context$modelFile$message <- as.character(result)
-    if (context$modelFile$message == "") {
+    context$model$file$message <- as.character(result)
+    if (context$model$file$message == "") {
       print("success")
       shinyWidgets::show_toast(
         glue::glue("Succesfully loaded '{name}'", name = file),
@@ -218,15 +234,15 @@ dataServer <- function(input, output, session, context) {
     }
     
     if (!is.null(result$error)) {
-      context$modelData(NULL)
+      context$model$data <- NULL
       shinyWidgets::show_toast(glue::glue("Error loading '{name}'", name = file),
                                result$message,
                                "error")
-      context$modelFile$initialized <- FALSE
+      context$model$file$initialized <- FALSE
     } else {
-      context$modelData(result$result)
-      if (context$modelFile$warnings %>% length() > 0) {
-        context$modelFile$status <- "warning"
+      context$model$data <- result$result
+      if (context$model$file$warnings %>% length() > 0) {
+        context$model$file$status <- "warning"
         shinyWidgets::show_toast(
           glue::glue("Loaded '{name}' with warnings", name = file),
           glue::glue(
@@ -238,7 +254,7 @@ dataServer <- function(input, output, session, context) {
           "warning"
         )
       } else {
-        context$modelFile$status <- "success"
+        context$model$file$status <- "success"
         shinyWidgets::show_toast(
           glue::glue("Successfully loaded '{name}'", name = file),
           glue::glue(
@@ -250,39 +266,44 @@ dataServer <- function(input, output, session, context) {
           "success"
         )
       }
-      context$modelFile$initialized <- TRUE
+      context$model$file$initialized <- TRUE
     }
   }) %>%
     bindEvent(input$model_file)
   
-  useExampleData <- observe({
-    env <- environment()
-    dataSetName <- data(df_pa, envir = env)
-    get(dataSetName, envir = env) %>%
-      tibble() %>%
-      context$modelData()
-    context$modelFile$status <- "success"
-    context$modelFile$initialized <- TRUE
-    shinyWidgets::show_toast(
-      glue::glue("Successfully loaded test data."),
-      glue::glue(
-        "{rows} observations of {cols} variables.",
-        rows = nrow(context$modelData()),
-        cols = ncol(context$modelData())
-      ),
-      type = "success"
-    )
-  }) %>% bindEvent(input$model_file_example)
+  updateModelVariables <- observe({
+    context$model$variables <- names(context$model$data)
+  }) %>% bindEvent(context$model$data)
+  
+  updateCostVariables <- observe({
+    context$model$cost_variables <- input$`cost-variables`
+  }) %>% bindEvent(input$`cost-variables`)
+  
+  updateUtilityVariables <- observe({
+    context$model$utility_variables <- input$`utility-variables`
+  }) %>% bindEvent(input$`utility-variables`)
+  
+  updateProbabilityVariables <- observe({
+    context$model$probability_variables <- input$`probability-variables`
+  }) %>% bindEvent(input$`probability-variables`)
+  
+  updateRelativeEffectivenessVariables <- observe({
+    context$model$relative_effectiveness_variables <- input$`relative-effectiveness-variables`
+  }) %>% bindEvent(input$`relative-effectiveness-variables`)
+  
+  updateScenarioVariable <- observe({
+    context$model$scenario_variable <- input$`scenario-variable`
+  }) %>% bindEvent(input$`scenario-variable`)
   
   selected_variables <- reactive({
     c(
       input$`cost-variables`,
-      input$`utility-variables`,
-      input$`probability-variables`,
-      input$`relative-effectiveness-variables`,
-      input$`scenario-variable`
+      context$model$utility_variables,
+      context$model$probability_variables,
+      context$model$relative_effectiveness_variables,
+      context$model$scenario_variable
     )
-  }) %>% debounce(500)
+  }) %>% debounce(1000)
   
   updateSelectizeChoices <- observe({
     set <- c(
@@ -292,40 +313,40 @@ dataServer <- function(input, output, session, context) {
       "relative-effectiveness-variables",
       "scenario-variable"
     )
-    update_exclusive_selectize_input_set(context$modelVariables(), set, input, session)
+    update_exclusive_selectize_input_set(context$model$variables, set, input, session)
     
-  }, priority = 50) %>% bindEvent(context$modelVariables(), selected_variables())
+  }, priority = 50) %>% bindEvent(context$model$variables, selected_variables())
   
   updateTotalCostChoices <- observe({
     updateSelectizeInput(
       session,
       "total-cost-variable-control",
-      choices = c("", input$`cost-variables`, context$modelVariables())
+      choices = c("", context$model$cost_variables, context$model$variables)
     )
     updateSelectizeInput(
       session,
       "total-cost-variable-experimental",
-      choices = c("", input$`cost-variables`, context$modelVariables())
+      choices = c("", context$model$cost_variables, context$model$variables)
     )
-  }) %>% bindEvent(input$`cost-variables`, context$modelVariables())
+  }) %>% bindEvent(context$model$cost_variables, context$model$variables)
   
   updateTotalUtilityChoices <- observe({
     updateSelectizeInput(
       session,
       "total-utility-variable-control",
-      choices = c("", input$`utility-variables`, context$modelVariables())
+      choices = c("", context$model$utility_variables, context$model$variables)
     )
     updateSelectizeInput(
       session,
       "total-utility-variable-experimental",
-      choices = c("", input$`utility-variables`, context$modelVariables())
+      choices = c("", context$model$utility_variables, context$model$variables)
     )
-  }) %>% bindEvent(input$`utility-variables`, context$modelVariables())
+  }) %>% bindEvent(context$model$utility_variables, context$model$variables)
   
   updateScenarioChoices <- observe({
-    updateSelectizeInput(session, "scenario", choices = context$scenarios())
-  }) %>% bindEvent(context$scenarios(), ignoreNULL = FALSE)
+    updateSelectizeInput(session, "scenario", choices = context$model$scenarios)
+  }) %>% bindEvent(context$model$scenarios, ignoreNULL = FALSE)
   
   output$modelPreview <-
-    renderDataTable(context$filteredModelData())
+    renderDataTable(context$model$data_filtered())
 }

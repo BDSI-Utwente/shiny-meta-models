@@ -58,16 +58,24 @@ server <- function(input, output, session) {
   observe({
     env <- environment()
     dataSetName <- data(df_pa, envir = env)
-    get(dataSetName, envir = env) %>%
-      tibble() %>%
-      context$modelData()
-    context$modelFile$status <- "success"
-    context$modelFile$initialized <- TRUE
-
+    context$model$data <- tibble(get(dataSetName, envir = env))
+    context$model$file$status <- "success"
+    context$model$file$initialized <- TRUE
+    
+    # set variables
+    context$model$cost_variables <- context$model$data %>% dplyr::select(starts_with("c_")) %>% names()
+    updateSelectizeInput(session, "cost-variables", selected = context$model$cost_variables)
+    
+    context$model$utility_variables <- context$model$data %>% dplyr::select(starts_with("u_")) %>% names()
+    updateSelectizeInput(session, "utility-variables", selected = context$model$utility_variables)
+    
+    context$model$probability_variables <- context$model$data %>% dplyr::select(starts_with("p_")) %>% names()
+    updateSelectizeInput(session, "probability-variables", selected = context$probability_variables)
+    
   }) %>% bindEvent(input$`setup-test-data`)
 }
 
 # Run the application
-if (interactive()) {
+# if (interactive()) {
   shinyApp(ui, server)
-}
+# } 
