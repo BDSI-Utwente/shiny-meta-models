@@ -1,6 +1,8 @@
 library(shiny)
 library(tidyverse)
 
+options(shiny.autoreload = TRUE)
+
 ui <- dashboardPage(
   title = "PACHBOARD",
   dark = FALSE,
@@ -52,6 +54,7 @@ server <- function(input, output, session) {
   dataServer(input, output, session, context)
   summaryServer(input, output, session, context)
 
+  ## test data binding ----
   observe({
     env <- environment()
     dataSetName <- data(df_pa, envir = env)
@@ -61,9 +64,6 @@ server <- function(input, output, session) {
     context$modelFile$status <- "success"
     context$modelFile$initialized <- TRUE
 
-    updateSelectizeInput(session, "cost-variables", selected = modelData() %>% select(starts_with("c_"), contains("cost")) %>% names())
-    updateSelectizeInput(session, "utility-variables", selected = modelData() %>% select(starts_with("u_"), contains("qaly")) %>% names())
-    updateSelectizeInput(session, "probability-variables", selected = modelData() %>% select(starts_with("p_")) %>% names())
   }) %>% bindEvent(input$`setup-test-data`)
 }
 
