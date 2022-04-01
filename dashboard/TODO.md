@@ -23,8 +23,8 @@
     - [x] Summary statistics (min/max/etc)
     - [x] Correlation matrix
     - [ ] Data checks
-        - [ ] variable name in message
-        - [ ] check/cross icon before message
+        - [x] variable name in message
+        - [x] check/cross icon before message
         - [x] utility in [0,1]
         - [x] probability in (0,1]
         - [x] costs positive
