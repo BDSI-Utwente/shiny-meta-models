@@ -274,26 +274,27 @@ dataServer <- function(input, output, session, context) {
     )
   }) %>% bindEvent(input$model_file_example)
   
+  selected_variables <- reactive({
+    c(
+      input$`cost-variables`,
+      input$`utility-variables`,
+      input$`probability-variables`,
+      input$`relative-effectiveness-variables`,
+      input$`scenario-variable`
+    )
+  }) %>% debounce(500)
+  
   updateSelectizeChoices <- observe({
-    cat("bliep\n")
-    set <-
-      c(
-        "cost-variables",
-        "utility-variables",
-        "probability-variables",
-        "relative-effectiveness-variables",
-        "scenario-variable"
-      )
+    set <- c(
+      "cost-variables",
+      "utility-variables",
+      "probability-variables",
+      "relative-effectiveness-variables",
+      "scenario-variable"
+    )
     update_exclusive_selectize_input_set(context$modelVariables(), set, input, session)
     
-  }) %>% bindEvent(
-    context$modelVariables(),
-    input$`cost-variables`,
-    input$`utility-variables`,
-    input$`probability-variables`,
-    input$`relative-effectiveness-variables`,
-    input$`scenario-variable`
-  )
+  }, priority = 50) %>% bindEvent(context$modelVariables(), selected_variables())
   
   updateTotalCostChoices <- observe({
     updateSelectizeInput(
