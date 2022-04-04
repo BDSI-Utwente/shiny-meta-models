@@ -54,6 +54,8 @@ server <- function(input, output, session) {
   dataServer(input, output, session, context)
   summaryServer(input, output, session, context)
   outcomesServer(input, output, session, context)
+  relationsServer(input, output, session, context)
+  predictionsServer(input, output, session, context)
 
   ## test data binding ----
   observe({
