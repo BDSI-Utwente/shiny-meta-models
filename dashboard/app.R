@@ -4,10 +4,10 @@ library(tidyverse)
 options(shiny.autoreload = TRUE)
 
 ui <- dashboardPage(
-  title = "PACHBOARD",
+  title = "PACBOARD",
   dark = FALSE,
   dashboardHeader(
-    title = "PACHBOARD",
+    title = "PACBOARD",
     actionButton("setup-test-data", "Use test data", status = "info", size = "sm", class = "ml-auto mr-0")
   ),
   dashboardSidebar(
@@ -53,6 +53,7 @@ server <- function(input, output, session) {
   context <- environment()
   dataServer(input, output, session, context)
   summaryServer(input, output, session, context)
+  outcomesServer(input, output, session, context)
 
   ## test data binding ----
   observe({
