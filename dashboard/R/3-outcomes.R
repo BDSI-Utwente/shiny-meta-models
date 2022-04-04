@@ -124,7 +124,6 @@ outcomesUI <- tabItem("outcomes",
                               value = 1000
                             ))
                           ),
-                        tags$hr(),
                         fluidRow(
                           column(
                             width = 8,
@@ -139,8 +138,50 @@ outcomesUI <- tabItem("outcomes",
                             )
                           )
                         )
+                        ),
+                      box(
+                        width = 12,
+                        title = "Convergence check",
+                        fluidRow(
+                          column(
+                            width = 4,
+                            selectizeInput(
+                              "output-convergence",
+                              label = "Select output for which you want to check the convergence",
+                              multiple = FALSE,
+                              choices = c()
+                            )
+                          ),
+                          column(
+                            width = 4,
+                            numericInput(
+                              "size-block-convergence",
+                              label = "Size of the iteration-blocks at which relative change in output is assessed (not used yet)",
+                              min = 0,
+                              max = Inf,
+                              value = 500
+                            )
+                          ),
+                          column(
+                            width = 4,
+                            numericInput(
+                              "convergence-limit",
+                              label = "At which relative change percentage should a vertical line be drawn? (not used yet)",
+                              min = 0,
+                              max = 1,
+                              value = 0.01
+                            )
+                          )
+                        ),
+                        fluidRow(
+                          column(
+                            width = 12,
+                            plotlyOutput("convergence_plot")
+                          )
+                        )
                         )
                       )
+
 # SERVER ------------------------------------------------------------------
 outcomesServer <- function(input, output, session, context) {
   
@@ -152,7 +193,8 @@ outcomesServer <- function(input, output, session, context) {
                                     total_effects_intervention = "",
                                     total_effects_comparator = "",
                                     total_costs_intervention = "",
-                                    total_costs_comparator = ""
+                                    total_costs_comparator = "",
+                                    output_convergence = ""
                                     )
   
   ## UI update observers ----
@@ -222,6 +264,14 @@ outcomesServer <- function(input, output, session, context) {
       selected = context$outcomes$iterations_to_highlight
     )
     
+    ### selectizeInput/output-convergence ----
+    updateSelectizeInput( 
+      session,
+      "output-convergence",
+      choices = context$model$variables,
+      selected = context$outcomes$output_convergence
+    )
+    
   }) %>% bindEvent(context$model$variables)
   
   ## SERVER update observers ----
@@ -265,6 +315,11 @@ outcomesServer <- function(input, output, session, context) {
     context$outcomes$iterations_to_highlight <- input$`iterations-to-highlight`
   }) %>% bindEvent(input$`iterations-to-highlight`)
   
+  ### context$outcomes$output_convergence ----
+  updateTotalCostsComparator <- observe({
+    context$outcomes$output_convergence <- input$`output-convergence`
+  }) %>% bindEvent(input$`output-convergence`)
+  
   ## SERVER update reactive ----
   ## ceac_inputs ----
   ceac_inputs <- reactive({
@@ -286,29 +341,24 @@ outcomesServer <- function(input, output, session, context) {
   ## OUTPUTS ----
   ### plotly/ice_plane ----
   output$ice_plane <- renderPlotly({
+    
     if(context$outcomes$incremental_effects_intervention != "" &&
-       context$outcomes$incremental_costs_intervention != "")
+       context$outcomes$incremental_costs_intervention != "") {
     user <- list()
     user$colour <- if(context$outcomes$colour_ice_plane != "") {context$outcomes$colour_ice_plane} else{NULL}
     user$n_it <- if(context$outcomes$iterations_to_highlight != "") {context$outcomes$iterations_to_highlight} else{NULL}
-   #if(context$outcomes$colour_ice_plane != "") {
-        pacheck::plot_ice(df = context$model$data_filtered() %>% as.data.frame(),
-                          param_1 = context$outcomes$incremental_effects_intervention,
-                          param_2 = context$outcomes$incremental_costs_intervention,
-                          col = user$colour,
-                          n_it = user$n_it,
-                          wtp = input$`willingness-to-pay`)
-   # } else {
-   #   pacheck::plot_ice(df = context$model$data_filtered() %>% as.data.frame(),
-   #                     param_1 = context$outcomes$incremental_effects_intervention,
-   #                     param_2 = context$outcomes$incremental_costs_intervention,
-   #                     col = NULL,
-   #                     wtp = input$`willingness-to-pay`)
-   # }
+    
+    pacheck::plot_ice(df = context$model$data_filtered() %>% as.data.frame(),
+                      param_1 = context$outcomes$incremental_effects_intervention,
+                      param_2 = context$outcomes$incremental_costs_intervention,
+                      col = user$colour,
+                      n_it = user$n_it,
+                      wtp = input$`willingness-to-pay`)
+    }
   })
   
   ###datatable/ice_summary ----
-  output$ice_summary <- renderDataTable({
+  output$ice_summary <- renderTable({
     
     if(context$outcomes$incremental_effects_intervention != "" &&
        context$outcomes$incremental_costs_intervention != ""){
@@ -340,5 +390,17 @@ outcomesServer <- function(input, output, session, context) {
     df_ceac_out[, which(names(df_ceac_out) != "WTP_threshold")] <- apply(df_ceac_out[, which(names(df_ceac_out) != "WTP_threshold")], 2, function(x) paste(round(x * 100), "%"))
     df_ceac_out
     
+  })
+  
+  ### plotly/convergence_plot ----
+  output$convergence_plot <- renderPlotly({
+    
+    if(context$outcomes$output_convergence != "") {
+      
+      pacheck::plot_convergence(df = context$model$data_filtered() %>% as.data.frame(),
+                                outcome = context$outcomes$output_convergence,
+                                block_size = input$`size-block-convergence`,
+                                conv_limit = input$`convergence-limit`)
+    }
   })
 }
