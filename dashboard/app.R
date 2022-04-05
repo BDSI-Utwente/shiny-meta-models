@@ -29,7 +29,8 @@ ui <- dashboardPage(
       menuItem(
         "Summary statistics",
         tabName = "summary",
-        icon = icon("search")
+        icon = icon("search"),
+        selected = TRUE
       ),
       menuItem(
         "Model outcomes",
@@ -39,8 +40,7 @@ ui <- dashboardPage(
       menuItem(
         "Relations",
         tabName = "relations",
-        icon = icon("chart-line"),
-        selected = TRUE
+        icon = icon("chart-line")
       ),
       menuItem(
         "Meta-model predictions",

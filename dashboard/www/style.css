@@ -1,7 +1,37 @@
-.lm-margin-tag {
+.tag-list {
+    display: flex;
+    flex-flow: row wrap;
+    gap: .4em;
+}
+
+.tag {
     padding: 0 0.3em 0.1em;
     background: rgba(0,0,0,.1);
     border-radius: 4px;
-    margin: 0 0.2em;
     font-size: smaller;
+}
+
+pre {
+    padding: 0 0.5em;
+    background: rgba(0,0,0,.1);
+    border-radius: 4px;
+}
+
+.shiny-options-group label { 
+    font-weight: unset !important; 
+}
+
+label.radio-inline + label.radio-inline { 
+    margin-left: 1em;
+}
+
+label.checkbox-inline + label.checkbox-inline { 
+    margin-left: 1em; 
+}
+
+label.checkbox-inline span, 
+label.radio-inline span { 
+    position: relative; 
+    bottom: 1px; 
+    margin-left: .25em; 
 }

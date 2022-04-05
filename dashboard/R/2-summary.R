@@ -39,20 +39,23 @@ summaryUI <- tabItem(
       actionButton(
         "summary-add-relative-effectiveness-variables",
         "Relative effectiveness"
-      )
+      ),
+      
+      ### action/summary-add-all-variables ----
+      actionButton("summary-add-all-variables", "Everything!")
     )
   ),
   ## dataTable/summary-statistics ----
   box(
     width = 12,
     title = "Summary statistics",
+    collapsed = TRUE,
     div(
       width = "100%",
       style = "overflow: auto;",
       dataTableOutput("summary-statistics")
     )
   ),
-  ## plotly/summary-correlation-matrix ----
   box(
     width = 12,
     title = "Correlation matrix",
@@ -60,13 +63,17 @@ summaryUI <- tabItem(
     div(
       width = "100%",
       style = "overflow: auto;",
-      plotlyOutput("summary-correlation-matrix")
+      ## plotly/summary-correlation-matrix ----
+      plotlyOutput("summary-correlation-matrix"),
+      ## html/summary-correlation-matrix-tags ----
+      htmlOutput("summary-correlation-matrix-tags")
     )
   ),
   ## plotly/summary-distribution-plot ----
   box(
     width = 12,
     title = "Distributions",
+    collapsed = TRUE,
     div(
       width = "100%",
       style = "overflow: hidden;",
@@ -76,13 +83,6 @@ summaryUI <- tabItem(
         "Variable",
         multiple = FALSE,
         choices = c()
-      ),
-      # TODO: move to global css
-      tags$style(
-        ".shiny-options-group label { font-weight: unset !important; } \n
-        label.radio-inline + label.radio-inline { margin-left: 1em; }\n
-        label.checkbox-inline + label.checkbox-inline { margin-left: 1em; }\n
-        label.checkbox-inline span, label.radio-inline span { position: relative; bottom: 1px; margin-left: .25em;"
       ),
       ### radioButtons/summary-distribution-type ----
       radioButtons(
@@ -228,6 +228,15 @@ summaryServer <- function(input, output, session, context) {
                          selected = context$summary$variables)
   }) %>% bindEvent(input$`summary-add-relative-effectiveness-variables`)
   
+  ### action/summary-add-all-variables ----
+  addAllVariables <- observe({
+    context$summary$variables <-
+      c(context$summary$variables, context$model$variables) %>% unique()
+    updateSelectizeInput(session,
+                         "summary-statistics-variables",
+                         selected = context$summary$variables)
+  }) %>% bindEvent(input$`summary-add-all-variables`)
+  
   ### change/summary-distribution-custom-type
   updateParameterLabels <- observe({
     attrs <- switch(
@@ -262,31 +271,77 @@ summaryServer <- function(input, output, session, context) {
     }
   })
   
-  ### plotly/summary-correlation-matrix ----
+  correlation_matrix_tags <- reactiveVal()
+  
+  # TODO: split into separate reactives for correlation matrix and plot so that
+  # we can cache plots without negatively affecting other reactives that depend
+  # on the cor matrix 
+  ## plotly/summary-correlation-matrix ----
   output$`summary-correlation-matrix` <- renderPlotly({
     if (is.null(context$model$data_filtered()) ||
         context$summary$variables %>% length() == 0) {
+      correlation_matrix_tags(NULL)
       return()
     }
-    correlations <- context$model$data_filtered() %>%
-      dplyr::select(!!!context$summary$variables) %>%
-      dplyr::select(where(is.numeric)) %>%
+    
+    selected_cols <- context$model$data_filtered() %>%
+      dplyr::select(!!!context$summary$variables)
+    
+    invalid_cols_non_numeric <- selected_cols %>%
+      dplyr::select(where(~ !is.numeric(.x))) %>%
+      names()
+    
+    invalid_cols_no_variance <- selected_cols %>%
+      dplyr::select(-any_of(invalid_cols_non_numeric)) %>%
+      dplyr::select(where(~ var(.x, na.rm = TRUE) <= 1e-4)) %>%
+      names()
+    
+    correlation_matrix_tags(bind_rows(
+      tibble(var = invalid_cols_non_numeric,
+             reason = "is not numeric"),
+      tibble(var = invalid_cols_no_variance,
+             reason = "has no variance")
+    ))
+    
+    valid_data <- selected_cols %>%
+      dplyr::select(-any_of(invalid_cols_non_numeric),
+                    -any_of(invalid_cols_no_variance))
+    
+    correlations <- valid_data %>%
       cor(use = "pair") %>%
       as_tibble(rownames = "x") %>%
       pivot_longer(-x, names_to = "y", values_to = "cor") %>%
       mutate(
         x = factor(x, context$summary$variables),
-        y = factor(y, context$summary$variables)
+        y = factor(y, context$summary$variables %>% rev())
       )
     plot <- correlations %>%
       ggplot(aes(x, y, fill = cor)) +
-      geom_raster()
+      geom_raster() +
+      scale_fill_continuous(limits = c(min(correlations$cor, 0), max(correlations$cor, 1))) +
+      theme(axis.text.x = element_text(angle = 45),
+            axis.title = element_blank())
     plot %>% ggplotly()
   }) %>%
-    bindCache(context$model$data_filtered(),
-              context$summary$variables) %>%
     bindEvent(context$model$data_filtered(),
               context$summary$variables)
+  
+  
+  ### html/summary-correlation-matrix-tags ----
+  output$`summary-correlation-matrix-tags` <- renderPrint({
+    tags <- correlation_matrix_tags()
+
+    if (!is.null(tags) && nrow(tags) >= 1) {
+      div(
+        span(style = "font-size: smaller;", "Excluded variables"),
+        div(class = "tag-list",
+            tags %>%
+              purrr::pmap(function(var, reason) {
+                div(class = "tag", code(var), reason)
+              }))
+      )
+    }
+  }) %>% bindEvent(correlation_matrix_tags(), ignoreInit = FALSE, ignoreNULL = FALSE)
   
   
   ### plotly/summary-distribution-plot ----

@@ -160,11 +160,10 @@ relationsServer <- function(input, output, session, context) {
     margins <- context$relations$margins()
     map2(margins,
          names(margins),
-         ~ div(class = "lm-margin-tag", code(.y), "held at", round(.x, 2))) %>% div(style =
-                                                                                      "display: flex;")
+         ~ div(class = "tag", code(.y), "held at", round(.x, 2))) %>% div(class = "tag-list")
   }) %>% bindEvent(context$relations$margins())
   
   output$`relations-dsa` <- renderDataTable({
     pacheck::dsa_lm_metamodel(context$model$data_filtered(), context$relations$lm())
-  })
+  }) %>% bindEvent(context$relations$lm())
 }
