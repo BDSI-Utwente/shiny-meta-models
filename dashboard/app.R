@@ -13,7 +13,6 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem(
-
         "Welcome",
         tabName = "welcome",
         icon = icon("magic")
@@ -26,13 +25,13 @@ ui <- dashboardPage(
       menuItem(
         "Summary statistics",
         tabName = "summary",
-        icon = icon("search"),
-        selected = TRUE
+        icon = icon("search")
       ),
       menuItem(
         "Model outcomes",
         tabName = "outcomes",
-        icon = icon("chart-bar")
+        icon = icon("chart-bar"),
+        selected = TRUE
       ),
       menuItem(
         "Relations",

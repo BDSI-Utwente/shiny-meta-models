@@ -97,53 +97,6 @@ dataUI <- tabItem(
     selectizeInput("scenario", "Scenario", choices = c())
   ),
   
-  # calculate net benefits
-  box(
-    title = "Calculate net benefits",
-    width = 12,
-    span(
-      class = "text-muted",
-      "Please select variables representing total costs and utility for the comparator and intervention conditions respectively."
-    ),
-    fluidRow(
-      column(
-        6,
-        h4("Total costs"),
-        selectizeInput(
-          "total-cost-variable-control",
-          "Comparator",
-          choices = c("loading...")
-        ),
-        selectizeInput(
-          "total-cost-variable-experimental",
-          "Intervention",
-          choices = c("loading...")
-        )
-      ),
-      column(
-        6,
-        h4("Total utility"),
-        selectizeInput(
-          "total-utility-variable-control",
-          "Comparator",
-          choices = c("loading...")
-        ),
-        selectizeInput(
-          "total-utility-variable-experimental",
-          "Intervention",
-          choices = c("loading...")
-        )
-      )
-    ),
-    div(class = "callout callout-warning", "TODO: Not yet implemented"),
-    actionButton(
-      "calculate-net-benefits",
-      "Calculate net benefits",
-      icon("calculator"),
-      status = "primary",
-      disabled = TRUE
-    )
-  ),
   
   # preview
   box(
@@ -316,32 +269,6 @@ dataServer <- function(input, output, session, context) {
     update_exclusive_selectize_input_set(context$model$variables, set, input, session)
     
   }, priority = 50) %>% bindEvent(context$model$variables, selected_variables())
-  
-  updateTotalCostChoices <- observe({
-    updateSelectizeInput(
-      session,
-      "total-cost-variable-control",
-      choices = c("", context$model$cost_variables, context$model$variables)
-    )
-    updateSelectizeInput(
-      session,
-      "total-cost-variable-experimental",
-      choices = c("", context$model$cost_variables, context$model$variables)
-    )
-  }) %>% bindEvent(context$model$cost_variables, context$model$variables)
-  
-  updateTotalUtilityChoices <- observe({
-    updateSelectizeInput(
-      session,
-      "total-utility-variable-control",
-      choices = c("", context$model$utility_variables, context$model$variables)
-    )
-    updateSelectizeInput(
-      session,
-      "total-utility-variable-experimental",
-      choices = c("", context$model$utility_variables, context$model$variables)
-    )
-  }) %>% bindEvent(context$model$utility_variables, context$model$variables)
   
   updateScenarioChoices <- observe({
     updateSelectizeInput(session, "scenario", choices = context$model$scenarios)
