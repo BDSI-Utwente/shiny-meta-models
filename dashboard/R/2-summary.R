@@ -12,12 +12,6 @@ cautiously_fit_dist <- cautiously(pacheck::fit_dist)
 # UI ----------------------------------------------------------------------
 summaryUI <- tabItem(
   "summary",
-  ## ui/summary-quick-checks ----
-  box(
-    width = 12,
-    title = "Quick checks",
-    uiOutput("summary-quick-checks")
-  ),
   # summary statistics
   box(
     width = 12,
@@ -293,68 +287,6 @@ summaryServer <- function(input, output, session, context) {
               context$summary$variables) %>%
     bindEvent(context$model$data_filtered(),
               context$summary$variables)
-  
-  ### ui/summary-quick-checks ----
-  output$`summary-quick-checks` <- renderUI({
-    checks <- list()
-    
-    if (context$model$probability_variables %>% length()) {
-      checks$prob_pos <- pacheck:::do_check(
-        context$model$data_filtered(),
-        context$model$probability_variables,
-        ~ .x > 0,
-        "greater than zero",
-        "all probabilities are {label_check}"
-      )
-      checks$prob_lt1 <- pacheck:::do_check(
-        context$model$data_filtered(),
-        context$model$probability_variables,
-        ~ .x <= 1,
-        "less than or equal to one",
-        "all probabilities are {label_check}"
-      )
-    } else {
-      checks$prob <- list(messages = tibble(ok = FALSE,
-                                            message = "no variables were marked as probabilities"))
-    }
-    
-    if (context$model$cost_variables %>% length()) {
-      checks$costs_pos <- pacheck:::do_check(
-        context$model$data_filtered(),
-        context$model$cost_variables,
-        ~ .x >= 0,
-        "positive",
-        "all costs are {label_check}"
-      )
-    } else {
-      checks$costs <-
-        list(messages = tibble(ok = FALSE, message = "no variables were marked as costs"))
-    }
-    
-    if (context$model$utility_variables %>% length()) {
-      checks$util_pos <- pacheck:::do_check(
-        context$model$data_filtered(),
-        context$model$utility_variables,
-        ~ .x >= 0,
-        "positive",
-        "all utilities are {label_check}"
-      )
-    } else {
-      checks$utilities <-
-        list(messages = tibble(ok = FALSE, message = "no variables were marked as utilities"))
-    }
-    
-    
-    msgs <- checks %>%
-      map_dfr("messages") %>%
-      rowwise() %>%
-      mutate(html = list(div(
-        class = ifelse(ok, "text-success", "text-danger"),
-        icon(ifelse(ok, "check", "warning"), verify_fa = FALSE),
-        message
-      )))
-    msgs %>% pull(html)
-  })
   
   
   ### plotly/summary-distribution-plot ----

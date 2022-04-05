@@ -86,17 +86,22 @@ dataUI <- tabItem(
     selectizeInput("scenario-variable", "Scenario", choices = c("loading..."))
   ),
   
-  # choose scenario
-  box(
-    title = "Choose scenario",
-    width = 12,
-    p(
-      class = "text-muted",
-      "If multiple scenarios are present and a variable for scenarios has selected, please select the scenario."
-    ),
-    selectizeInput("scenario", "Scenario", choices = c())
+  ## choose scenario ----
+  conditionalPanel(
+    "input['scenario-variable'] != ''",
+    box(
+      title = "Choose scenario",
+      width = 12,
+      selectizeInput("scenario", "Scenario", choices = c())
+    )
   ),
   
+  ## ui/summary-quick-checks ----
+  box(
+    width = 12,
+    title = "Quick checks",
+    uiOutput("summary-quick-checks")
+  ),
   
   # preview
   box(
@@ -109,23 +114,21 @@ dataUI <- tabItem(
 
 dataServer <- function(input, output, session, context) {
   context$model <- reactiveValues(
-    file = reactiveValues(
-      status = NULL,
-      initialized = FALSE
-    ),
+    file = reactiveValues(status = NULL,
+                          initialized = FALSE),
     variables = c(),
     cost_variables = c(),
     utility_variables = c(),
     probability_variables = c(),
     relative_effect_variables = c(),
-    scenario_variable = "", 
+    scenario_variable = "",
     scenarios = c(),
     scenario = ""
   )
   
   # upload data -------------------------------------------------------------
   context$model$file <- reactiveValues(status = NULL,
-                                      initialized = FALSE)
+                                       initialized = FALSE)
   
   context$model$data_filtered <- reactive({
     if (scenarioValid()) {
@@ -141,13 +144,13 @@ dataServer <- function(input, output, session, context) {
   })
   
   updateScenario <- observe({
-    context$model$scenario <- input$scenario  
+    context$model$scenario <- input$scenario
   }) %>% bindEvent(input$scenario)
   
   updateScenarios <- observe({
-    if(scenarioVariableValid()) {
-      context$model$scenarios <- 
-        context$model$data %>% 
+    if (scenarioVariableValid()) {
+      context$model$scenarios <-
+        context$model$data %>%
         pull(!!context$model$scenario_variable) %>%
         unique() %>% c(None = "", None = "none", .)
     } else {
@@ -241,16 +244,17 @@ dataServer <- function(input, output, session, context) {
   }) %>% bindEvent(input$`probability-variables`)
   
   updateRelativeEffectivenessVariables <- observe({
-    context$model$relative_effectiveness_variables <- input$`relative-effectiveness-variables`
+    context$model$relative_effectiveness_variables <-
+      input$`relative-effectiveness-variables`
   }) %>% bindEvent(input$`relative-effectiveness-variables`)
   
   updateScenarioVariable <- observe({
     context$model$scenario_variable <- input$`scenario-variable`
   }) %>% bindEvent(input$`scenario-variable`)
   
-  selected_variables <- reactive({
+  context$model$selected_variables <- reactive({
     c(
-      input$`cost-variables`,
+      context$model$cost_variables,
       context$model$utility_variables,
       context$model$probability_variables,
       context$model$relative_effectiveness_variables,
@@ -266,13 +270,82 @@ dataServer <- function(input, output, session, context) {
       "relative-effectiveness-variables",
       "scenario-variable"
     )
-    update_exclusive_selectize_input_set(context$model$variables, set, input, session)
+    selected <- list(
+      `cost-variables` = context$model$cost_variables,
+      `utility-variables` = context$model$utility_variables,
+      `probability-variables` = context$model$probability_variables,
+      `relative-effectiveness-variables` = context$model$relative_effectiveness_variables,
+      `scenario-variable` = context$model$scenario_variable
+    )
+    update_exclusive_selectize_input_set(context$model$variables, set, selected, session)
     
-  }, priority = 50) %>% bindEvent(context$model$variables, selected_variables())
+  }, priority = 50) %>% bindEvent(context$model$variables, context$model$selected_variables())
   
   updateScenarioChoices <- observe({
     updateSelectizeInput(session, "scenario", choices = context$model$scenarios)
   }) %>% bindEvent(context$model$scenarios, ignoreNULL = FALSE)
+  
+  ### ui/summary-quick-checks ----
+  output$`summary-quick-checks` <- renderUI({
+    checks <- list()
+    
+    if (context$model$probability_variables %>% length()) {
+      checks$prob_pos <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$model$probability_variables,
+        ~ .x > 0,
+        "greater than zero",
+        "all probabilities are {label_check}"
+      )
+      checks$prob_lt1 <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$model$probability_variables,
+        ~ .x <= 1,
+        "less than or equal to one",
+        "all probabilities are {label_check}"
+      )
+    } else {
+      checks$prob <- list(messages = tibble(ok = FALSE,
+                                            message = "no variables were marked as probabilities"))
+    }
+    
+    if (context$model$cost_variables %>% length()) {
+      checks$costs_pos <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$model$cost_variables,
+        ~ .x >= 0,
+        "positive",
+        "all costs are {label_check}"
+      )
+    } else {
+      checks$costs <-
+        list(messages = tibble(ok = FALSE, message = "no variables were marked as costs"))
+    }
+    
+    if (context$model$utility_variables %>% length()) {
+      checks$util_pos <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$model$utility_variables,
+        ~ .x >= 0,
+        "positive",
+        "all utilities are {label_check}"
+      )
+    } else {
+      checks$utilities <-
+        list(messages = tibble(ok = FALSE, message = "no variables were marked as utilities"))
+    }
+    
+    
+    msgs <- checks %>%
+      map_dfr("messages") %>%
+      rowwise() %>%
+      mutate(html = list(div(
+        class = ifelse(ok, "text-success", "text-danger"),
+        icon(ifelse(ok, "check", "warning"), verify_fa = FALSE),
+        message
+      )))
+    msgs %>% pull(html)
+  })
   
   output$modelPreview <-
     renderDataTable(context$model$data_filtered())

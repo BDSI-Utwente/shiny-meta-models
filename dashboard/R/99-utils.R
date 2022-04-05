@@ -1,12 +1,12 @@
-filter_exclusive_variable_choices <- function(choices, set, self, input){
+filter_exclusive_variable_choices <- function(choices, set, self, selected){
   for (other in set %>% setdiff(self)){
-    choices <- choices %>% setdiff(input[[other]])
+    choices <- choices %>% setdiff(selected[[other]])
   }
 
   choices
 }
 
-update_exclusive_selectize_input_set <- function(choices, set, input, session){
+update_exclusive_selectize_input_set <- function(choices, set, selected, session){
   for (id in set){
     updateSelectizeInput(
       session,
@@ -15,9 +15,9 @@ update_exclusive_selectize_input_set <- function(choices, set, input, session){
         choices,
         set,
         id,
-        input
+        selected
       ), 
-      selected = input[[id]]
+      selected = selected[[id]]
     )  
   }
 }
