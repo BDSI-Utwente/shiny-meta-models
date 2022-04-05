@@ -4,7 +4,6 @@ library(pacheck)
 # UI ----------------------------------------------------------------------
 outcomesUI <- tabItem(
   "outcomes",
-  h1("Outcomes"),
   
   ## outcome vars ----
   box(
