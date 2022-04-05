@@ -5,6 +5,8 @@ FIT_TYPES <- c("norm", "beta", "gamma", "lnorm")
 
 source("./functions/cautiously.R")
 check_cautiously <- cautiously(do_quick_check)
+cautiously_vis_1_param <- cautiously(pacheck::vis_1_param)
+cautiously_fit_dist <- cautiously(pacheck::fit_dist)
 
 
 # UI ----------------------------------------------------------------------
@@ -354,6 +356,7 @@ summaryServer <- function(input, output, session, context) {
     msgs %>% pull(html)
   })
   
+  
   ### plotly/summary-distribution-plot ----
   output$`summary-distribution-plot` <- renderPlotly({
     if (!is.null(context$model$data_filtered()) &&
@@ -366,7 +369,7 @@ summaryServer <- function(input, output, session, context) {
         user$mean <- input$`summary-distribution-custom-mean`
       }
       
-      pacheck::vis_1_param(
+      plot <- cautiously_vis_1_param(
         context$model$data_filtered() %>% as.data.frame(),
         context$summary$distribution_variable,
         type = input$`summary-distribution-type`,
@@ -376,6 +379,15 @@ summaryServer <- function(input, output, session, context) {
         user_param_2 = user$param_2,
         user_mean = user$mean
       )
+      
+      str(plot)
+      if (!is.null(plot$error)) {
+        stop(
+          plot$error$message,
+          "\nYou may be trying to fit a model that is inappropriate for this variable, or the variable selected may have no variance."
+        )
+      }
+      plot$result
     }
   })
   
@@ -384,10 +396,10 @@ summaryServer <- function(input, output, session, context) {
         nrow(context$model$data_filtered()) <= 0 ||
         context$summary$distribution_variable == "" ||
         length(input$`summary-distribution-fits`) <= 0) {
-      return(NULL)
+      return(list(result = NULL))
     }
     
-    pacheck::fit_dist(
+    cautiously_fit_dist(
       context$model$data_filtered() %>% as.data.frame(),
       context$summary$distribution_variable,
       input$`summary-distribution-fits` %>% intersect(FIT_TYPES) # filter out custom
@@ -396,13 +408,20 @@ summaryServer <- function(input, output, session, context) {
   
   ### table/summary-distribution-fit-stats ----
   output$`summary-distribution-fit` <- renderTable({
-    if (!is.null(context$summary$distribution_stats())) {
-      .data <- reduce(context$summary$distribution_stats(), left_join)
-      .data %>% 
-        dplyr::select(-tidyselect::starts_with("Name_")) %>% 
-        rename_with(~str_remove_all(.x, "Value_") %>% 
-                      str_replace_all("_", " ") %>% 
-                      str_to_title()) %>% 
+    stats = context$summary$distribution_stats()
+    if (!is.null(stats$error)) {
+      stop(
+        stats$error,
+        "You may be trying to fit a model that is inappropriate for this variable, or the variable selected may have no variance."
+      )
+    }
+    if (!is.null(stats$result)) {
+      .data <- reduce(stats$result, left_join)
+      .data %>%
+        dplyr::select(-tidyselect::starts_with("Name_")) %>%
+        rename_with( ~ str_remove_all(.x, "Value_") %>%
+                       str_replace_all("_", " ") %>%
+                       str_to_title()) %>%
         arrange(Distribution)
     }
   })

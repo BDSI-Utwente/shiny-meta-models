@@ -6,7 +6,7 @@ library(htmltools)
 #' Cautiously
 #'
 #' Combines \link{purrr}'s safely and cautiously, returning a function that calls ` .f`,
-#' and returns a list containing ` result`, ` error`, `warning` , ` message`, and ` output`.
+#' and returns a list containing `result`, `error`, `warning` , `message`, and `output`.
 #'
 #' If an error occurs while calling `.f`, `result` will be `NULL`, otherwise `error` will be `NULL`
 #' @param .f function to wrap
