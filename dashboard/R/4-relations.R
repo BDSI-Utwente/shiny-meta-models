@@ -8,9 +8,9 @@
 
 
 
+
+
 # UI ----------------------------------------------------------------------
-
-
 relationsUI <- tabItem(
   "relations",
   box(
@@ -42,11 +42,18 @@ relationsUI <- tabItem(
               "relations-lm-plot-predictor-variable",
               "Predictor",
               choices = c("Choose x axis..." = "")
-            )
+            ),
+            htmlOutput("relations-lm-margins")
           )
         )
       )
     )
+  ),
+  box(
+    title = "Deterministic Sensitivity Analysis",
+    width = 12,
+    div(style = "overflow: auto;",
+        dataTableOutput("relations-dsa"))
   )
 )
 
@@ -94,6 +101,8 @@ relationsServer <- function(input, output, session, context) {
     }
   }) %>% debounce(500)
   
+  context$relations$margins <- reactiveVal()
+  
   ## outputs ----
   output$`relations-lm-summary` <- renderPrint({
     if (!is.null(context$relations$lm())) {
@@ -112,8 +121,8 @@ relationsServer <- function(input, output, session, context) {
         x_var <- x_vars %>% first()
       }
       
-      data <- context$model$data_filtered() %>% 
-        dplyr::select(!!!x_vars,!!y_var)
+      data <- context$model$data_filtered() %>%
+        dplyr::select(!!!x_vars, !!y_var)
       
       # predict at 100 points across the range of x
       pred_data <- tibble(.rows = 100)
@@ -123,17 +132,20 @@ relationsServer <- function(input, output, session, context) {
             length.out = 100)
       
       # pin other variables at their means
+      margins <- list()
       for (var in x_vars) {
         if (var == x_var)
           next
         
-        pred_data[[var]] <- data[[var]] %>% mean(na.rm = TRUE)
+        pred_data[[var]] <-
+          margins[[var]] <- mean(data[[var]], na.rm = TRUE)
       }
+      context$relations$margins(margins)
       
       predictions <- predict(context$relations$lm(),
                              pred_data,
                              interval = "conf") %>%
-        as_tibble() %>% 
+        as_tibble() %>%
         bind_cols(pred_data)
       
       ggplot(predictions, aes(
@@ -142,11 +154,29 @@ relationsServer <- function(input, output, session, context) {
         ymin = lwr,
         ymax = upr
       )) +
-        labs(x = x_var, y = y_var) + 
+        labs(x = x_var, y = y_var) +
         geom_ribbon(alpha = .4, fill = "steelblue") +
-        geom_line() + 
-        geom_point(aes(x = .data[[x_var]], y = .data[[y_var]]), data = data %>% slice_sample(n = 100), inherit.aes = FALSE, alpha = 0.2, shape = 16)
+        geom_line() +
+        geom_point(
+          aes(x = .data[[x_var]], y = .data[[y_var]]),
+          data = data %>% slice_sample(n = 500),
+          inherit.aes = FALSE,
+          alpha = 0.2,
+          shape = 16
+        )
     }
   }) %>% bindEvent(context$relations$lm(),
                    input$`relations-lm-plot-predictor-variable`)
+  
+  output$`relations-lm-margins` <- renderPrint({
+    margins <- context$relations$margins()
+    map2(margins,
+         names(margins),
+         ~ div(class = "lm-margin-tag", code(.y), "held at", round(.x, 2))) %>% div(style =
+                                                                                      "display: flex;")
+  }) %>% bindEvent(context$relations$margins())
+  
+  output$`relations-dsa` <- renderDataTable({
+    pacheck::dsa_lm_metamodel(context$model$data_filtered(), context$relations$lm())
+  })
 }

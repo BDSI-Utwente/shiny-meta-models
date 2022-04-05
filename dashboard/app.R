@@ -8,6 +8,7 @@ ui <- dashboardPage(
   dark = FALSE,
   dashboardHeader(
     title = "PACBOARD",
+    tags$link(href = "style.css", rel="stylesheet"),
     actionButton(
       "setup-test-data",
       "Use test data",

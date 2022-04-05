@@ -55,24 +55,24 @@
             - [ ] add test x > y
 
 - Model outcomes / outputs
-    - [ ] Move net benefits here
-    - [ ] incremental cost-effectiveness (ICE) plane
+    - [x] Move net benefits here
+    - [x] incremental cost-effectiveness (ICE) plane
         - inputs based on net benefits box
         - [ ] Hover: laat de inhoud zien van de rijd van de dataframe die het dichtste bij de muis is
         - [ ] Brush summary stats van de geselecteerde rijen door gebruik van generate_sum_stats() functie --> optioneel: link de brush met een andere plot waar 1 of 2 input waarde geplot zijn.
         - see `shiny::runGitHub("Teaching", "Xa4P", subdir = "Basics/shiny_app_cea/", ref = "main")`
         - pacheck::plot_ice, summary_ice
         - [ ] fancy: add histograms on axes
-    - [ ] cost-effectiveness acceptability curve (CEAC)
+    - [x] cost-effectiveness acceptability curve (CEAC)
         - inputs based on net benefits box
-        - [ ] calculate_ceac, plot_ceac
-    - [ ] convergence graph of outcomes
+        - [x] calculate_ceac, plot_ceac
+    - [x] convergence graph of outcomes
         - plot_convergence
         - [ ] block_size, conv_limit adjustable
 - Relations
-    - [ ] Linear Models
-        - [ ] Select outcome (single)
-        - [ ] Select inputs
+    - [x] Linear Models
+        - [x] Select outcome (single)
+        - [x] Select inputs
             - [ ] Add grouped buttons (see categories)
     - [ ] Deterministic Sensitivity Analysis
         - inputs from linear model
