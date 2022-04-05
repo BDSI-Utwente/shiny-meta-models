@@ -6,6 +6,8 @@
 
 
 
+
+
 # UI ----------------------------------------------------------------------
 
 
@@ -101,29 +103,50 @@ relationsServer <- function(input, output, session, context) {
   })
   
   output$`relations-lm-plot` <- renderPlotly({
-    if(!is.null(context$relations$lm())) {
-      if(!is.null(input$`relations-lm-plot-predictor-variable`) && input$`relations-lm-plot-predictor-variable` != "") {
-        x_var <- input$`relations-lm-plot-predictor-variable`
-      } else {
-        x_var <- input$`relations-lm-predictor-variables` %>% first()
-      }
+    if (!is.null(context$relations$lm())) {
       y_var <- input$`relations-lm-outcome-variable`
+      x_var <- input$`relations-lm-plot-predictor-variable`
+      x_vars <- input$`relations-lm-predictor-variables`
       
-      print(x_var)
-      print(y_var)
+      if (is.null(x_var) || x_var == "") {
+        x_var <- x_vars %>% first()
+      }
       
-      # TODO: fix other predictors (e.g. mean, representatitive value)
-      data <- predict(context$relations$lm(), interval = "conf") %>% 
-        as_tibble() %>%
-        bind_cols(context$model$data_filtered() %>% dplyr::select(!!x_var, !!y_var))
+      data <- context$model$data_filtered() %>% 
+        dplyr::select(!!!x_vars,!!y_var)
       
-      print(data)
-      str(data)
+      # predict at 100 points across the range of x
+      pred_data <- tibble(.rows = 100)
+      pred_data[[x_var]] <-
+        seq(data[[x_var]] %>% min(na.rm = TRUE),
+            data[[x_var]] %>% max(na.rm = TRUE),
+            length.out = 100)
       
-      ggplot(data, aes(x = .data[[x_var]], y = .data[[y_var]], ymin = lwr, ymax = upr)) + 
-        geom_point(alpha = .2, data = data %>% slice_sample(n = 500)) + 
-        geom_ribbon(alpha = .4, fill = "steelblue") + 
-        geom_line(aes(y = fit))
+      # pin other variables at their means
+      for (var in x_vars) {
+        if (var == x_var)
+          next
+        
+        pred_data[[var]] <- data[[var]] %>% mean(na.rm = TRUE)
+      }
+      
+      predictions <- predict(context$relations$lm(),
+                             pred_data,
+                             interval = "conf") %>%
+        as_tibble() %>% 
+        bind_cols(pred_data)
+      
+      ggplot(predictions, aes(
+        x = .data[[x_var]],
+        y = fit,
+        ymin = lwr,
+        ymax = upr
+      )) +
+        labs(x = x_var, y = y_var) + 
+        geom_ribbon(alpha = .4, fill = "steelblue") +
+        geom_line() + 
+        geom_point(aes(x = .data[[x_var]], y = .data[[y_var]]), data = data %>% slice_sample(n = 100), inherit.aes = FALSE, alpha = 0.2, shape = 16)
     }
-  }) %>% bindEvent(context$relations$lm(), input$`relations-lm-plot-predictor-variable`)
+  }) %>% bindEvent(context$relations$lm(),
+                   input$`relations-lm-plot-predictor-variable`)
 }
