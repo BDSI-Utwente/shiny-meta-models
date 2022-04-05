@@ -437,14 +437,14 @@ outcomesServer <- function(input, output, session, context) {
         context$outcomes$intervention_incremental_costs != "") {
       user <- list()
       user$colour <-
-        if (context$outcomes$ice_plane_colour_variable() != "") {
-          context$outcomes$ice_plane_colour_variable()
+        if (ice$colour() != "") {
+          ice$colour()
         } else{
           NULL
         }
       user$n_it <-
-        if (length(context$outcomes$iterations_highlight()) >= 1) {
-          context$outcomes$iterations_highlight()
+        if (length(ice$highlights()) >= 1) {
+          ice$highlights()
         } else{
           NULL
         }
@@ -455,7 +455,7 @@ outcomesServer <- function(input, output, session, context) {
         param_2 = context$outcomes$intervention_incremental_costs,
         col = user$colour,
         n_it = user$n_it,
-        wtp = context$outcomes$willingness_to_pay()
+        wtp = ice$wtp()
       )
     }
   })
