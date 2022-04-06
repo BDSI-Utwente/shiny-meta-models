@@ -146,6 +146,17 @@ outcomesUI <- tabItem(
                     ### table/ice_summary
                     tableOutput("ice_summary")))
   ),
+  ## CE plane ----
+  box(
+    width = 12,
+    title = "Cost-effectiveness plane",
+    fluidRow(
+      column(
+        width = 12,
+        plotlyOutput("ce_plane")
+      )
+      )
+    ),
   ## CEAC ----
   box(
     width = 12,
@@ -468,6 +479,21 @@ outcomesServer <- function(input, output, session, context) {
         df = context$model$data_filtered() %>% as.data.frame(),
         context$outcomes$intervention_incremental_effects,
         context$outcomes$intervention_incremental_costs
+      )
+    }
+  })
+  
+  ### plotly/ce_plane ----
+  output$ce_plane <- renderPlotly({
+    if (context$outcomes$intervention_total_effects != "" &&
+        context$outcomes$comparator_total_effects != "" &&
+        context$outcomes$intervention_total_costs != "" &&
+        context$outcomes$comparator_total_costs != "") {
+      pacheck::plot_ce(df = context$model$data_filtered() %>% as.data.frame(),
+                       e_int = context$outcomes$intervention_total_effects,
+                       c_int = context$outcomes$intervention_total_costs,
+                       e_comp = context$outcomes$comparator_total_effects,
+                       c_comp = context$outcomes$comparator_total_costs
       )
     }
   })
