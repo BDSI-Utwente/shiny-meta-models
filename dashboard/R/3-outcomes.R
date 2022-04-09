@@ -16,89 +16,83 @@ outcomesUI <- tabItem(
     # fluidRow(
     #   column(
     #     6,
-        h4("Intervention"),
-        fluidRow(
-          column(
-            6,
-            ### selectize/outcomes-intervention-total-costs ----
-            selectizeInput(
-              "outcomes-intervention-total-costs",
-              "Total costs",
-              choices = c("no data loaded..." = "")
-            )
-          ),
-          column(
-            6,
-            ### selectize/outcomes-intervention-total-effects ----
-            selectizeInput(
-              "outcomes-intervention-total-effects",
-              "Total effects",
-              choices = c("no data loaded..." = "")
-            )
-          )
-        ),
-        fluidRow(
-          column(
-            6,
-            ### selectize/outcomes-intervention-incremental-costs ----
-            selectizeInput(
-              "outcomes-intervention-incremental-costs",
-              "Incremental costs",
-              choices = c("no data loaded..." = "")
-            )
-          ),
-          column(
-            6,
-            ### selectize/outcomes-intervention-incremental-effects ----
-            selectizeInput(
-              "outcomes-intervention-incremental-effects",
-              "Incremental effects",
-              choices = c("no data loaded..." = "")
-            )
-          )
-        ),
-      # ),
-      # column(
-      #   6,
-        h4("Comparator"),
-        fluidRow(
-          column(
-            6,
-            ### selectize/outcomes-comparator-total-costs ----
-            selectizeInput(
-              "outcomes-comparator-total-costs",
-              "Total costs",
-              choices = c("no data loaded..." = "")
-            )
-          ),
-          column(
-            6,
-            ### selectize/outcomes-comparator-total-effects ----
-            selectizeInput(
-              "outcomes-comparator-total-effects",
-              "Total effects",
-              choices = c("no data loaded..." = "")
-            )
-          )
-        ) #,
-        # fluidRow(
-        #   column(
-        #     6,
-        #     selectizeInput(
-        #       "outcomes-comparator-incremental-costs",
-        #       "Incremental costs",
-        #       choices = c("no data loaded..." = "")
-        #     )
-        #   ),
-        #   column(
-        #     6,
-        #     selectizeInput(
-        #       "outcomes-comparator-incremental-effects",
-        #       "Incremental effects",
-        #       choices = c("no data loaded..." = "")
-        #     )
-        #   )
-        # )
+    h4("Intervention"),
+    fluidRow(column(
+      6,
+      ### selectize/outcomes-intervention-total-costs ----
+      selectizeInput(
+        "outcomes-intervention-total-costs",
+        "Total costs",
+        choices = c("no data loaded..." = "")
+      )
+    ),
+    column(
+      6,
+      ### selectize/outcomes-intervention-total-effects ----
+      selectizeInput(
+        "outcomes-intervention-total-effects",
+        "Total effects",
+        choices = c("no data loaded..." = "")
+      )
+    )),
+    fluidRow(column(
+      6,
+      ### selectize/outcomes-intervention-incremental-costs ----
+      selectizeInput(
+        "outcomes-intervention-incremental-costs",
+        "Incremental costs",
+        choices = c("no data loaded..." = "")
+      )
+    ),
+    column(
+      6,
+      ### selectize/outcomes-intervention-incremental-effects ----
+      selectizeInput(
+        "outcomes-intervention-incremental-effects",
+        "Incremental effects",
+        choices = c("no data loaded..." = "")
+      )
+    )),
+    # ),
+    # column(
+    #   6,
+    h4("Comparator"),
+    fluidRow(column(
+      6,
+      ### selectize/outcomes-comparator-total-costs ----
+      selectizeInput(
+        "outcomes-comparator-total-costs",
+        "Total costs",
+        choices = c("no data loaded..." = "")
+      )
+    ),
+    column(
+      6,
+      ### selectize/outcomes-comparator-total-effects ----
+      selectizeInput(
+        "outcomes-comparator-total-effects",
+        "Total effects",
+        choices = c("no data loaded..." = "")
+      )
+    )) #,
+    # fluidRow(
+    #   column(
+    #     6,
+    #     selectizeInput(
+    #       "outcomes-comparator-incremental-costs",
+    #       "Incremental costs",
+    #       choices = c("no data loaded..." = "")
+    #     )
+    #   ),
+    #   column(
+    #     6,
+    #     selectizeInput(
+    #       "outcomes-comparator-incremental-effects",
+    #       "Incremental effects",
+    #       choices = c("no data loaded..." = "")
+    #     )
+    #   )
+    # )
     #   )
     # )
   ),
@@ -106,114 +100,156 @@ outcomesUI <- tabItem(
   box(
     width = 12,
     title = "Incremental cost-effectiveness plane",
-    fluidRow(
-      column(
-        width = 3,
-        ### numeric/outcomes-willingness-to-pay ----
-        numericInput(
-          "outcomes-willingness-to-pay",
-          label = "Willingness to pay threshold",
-          value = NULL,
-          min = 0,
-          max = Inf
+    collapsed = TRUE,
+    conditionalPanel(
+      "input['outcomes-intervention-incremental-costs'] != '' && input['outcomes-intervention-incremental-effects'] != ''",
+      fluidRow(
+        column(
+          width = 3,
+          ### numeric/outcomes-willingness-to-pay ----
+          numericInput(
+            "outcomes-willingness-to-pay",
+            label = "Willingness to pay threshold",
+            value = NULL,
+            # TODO: set meaningful default value?
+            min = 0,
+            max = Inf
+          )
+        ),
+        column(
+          width = 3,
+          ### selectize/outcomes-iterations-highlight ----
+          selectizeInput(
+            "outcomes-iterations-highlight",
+            label = "Highlight iterations",
+            multiple = TRUE,
+            choices = c()
+          )
+        ),
+        column(
+          width = 6,
+          ### selectize/outcomes-ice-plane-colour-variable ----
+          selectizeInput(
+            "outcomes-ice-plane-colour-variable",
+            label = "Colour by",
+            multiple = FALSE,
+            choices = c()
+          )
         )
       ),
-      column(
-        width = 3,
-        ### selectize/outcomes-iterations-highlight ----
-        selectizeInput(
-          "outcomes-iterations-highlight",
-          label = "Highlight iteriations",
-          multiple = TRUE,
-          choices = c()
-        )
-      ),
-      column(
-        width = 6,
-        ### selectize/outcomes-ice-plane-colour-variable ----
-        selectizeInput(
-          "outcomes-ice-plane-colour-variable",
-          label = "Colour by",
-          multiple = FALSE,
-          choices = c()
-        )
-      )
+      fluidRow(column(width = 9,
+                      ### plotly/ice_plane ----
+                      plotOutput("ice_plane")),
+               column(width = 3,
+                      ### table/ice_summary ----
+                      tableOutput("ice_summary")))
     ),
-    fluidRow(column(width = 9,
-                    ### plotly/ice_plane
-                    plotlyOutput("ice_plane")),
-             column(width = 3,
-                    ### table/ice_summary
-                    tableOutput("ice_summary")))
+    
+    conditionalPanel(
+      "input['outcomes-intervention-incremental-costs'] == '' || input['outcomes-intervention-incremental-effects'] == ''",
+      bs4Dash::bs4Callout(
+        "You must load a data set and select incremental costs and effects variables before an incremental cost-effectiveness plane can be created.",
+        title = "Select outcome variables",
+        status = "info",
+        width = 12
+      )
+    )
   ),
   ## CE plane ----
   box(
     width = 12,
     title = "Cost-effectiveness plane",
-    fluidRow(
-      column(
-        width = 12,
-        plotlyOutput("ce_plane")
+    collapsed = TRUE,
+    fluidRow(column(
+      width = 12,
+      conditionalPanel(
+        "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
+        ### plotly/ce_plane ----
+        plotOutput("ce_plane")
+      ),
+      conditionalPanel(
+        "input['outcomes-intervention-total-costs'] == '' || input['outcomes-intervention-total-effects'] == '' || input['outcomes-comparator-total-costs'] == '' || input['outcomes-comparator-total-effects'] == ''",
+        bs4Dash::bs4Callout(
+          "You must load a data set and select total costs and effects variables for the intervention and comparator conditions before a cost-effectiveness plane can be created.",
+          title = "Select outcome variables",
+          status = "info",
+          width = 12
+        )
       )
-      )
-    ),
+    ))
+  ),
   ## CEAC ----
   box(
     width = 12,
     title = "Cost-effectiveness acceptability curve",
-    h5("Willingness to pay"),
-    fluidRow(
-      column(
-        width = 4,
-        ### numeric/outcomes-ceac-wtp-min ----
-        numericInput(
-          "outcomes-ceac-wtp-min",
-          label = "Minimum",
-          min = 0,
-          max = Inf,
-          value = 0
+    collapsed = TRUE,
+    conditionalPanel(
+      "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
+      
+      h5("Willingness to pay"),
+      fluidRow(
+        column(
+          width = 4,
+          ### numeric/outcomes-ceac-wtp-min ----
+          numericInput(
+            "outcomes-ceac-wtp-min",
+            label = "Minimum",
+            min = 0,
+            max = Inf,
+            value = 0
+          )
+        ),
+        column(
+          width = 4,
+          ### numeric/outcomes-ceac-wtp-max ----
+          numericInput(
+            "outcomes-ceac-wtp-max",
+            label = "Maximum",
+            min = 0,
+            max = Inf,
+            value = 100000
+          )
+        ),
+        column(
+          width = 4,
+          ### numeric/outcomes-ceac-wtp-step ----
+          numericInput(
+            "outcomes-ceac-wtp-step",
+            label = "Step size",
+            min = 0,
+            max = Inf,
+            value = 1000
+          )
         )
       ),
-      column(
-        width = 4,
-        ### numeric/outcomes-ceac-wtp-max ----
-        numericInput(
-          "outcomes-ceac-wtp-max",
-          label = "Maximum",
-          min = 0,
-          max = Inf,
-          value = 100000
-        )
-      ),
-      column(
-        width = 4,
-        ### numeric/outcomes-ceac-wtp-step ----
-        numericInput(
-          "outcomes-ceac-wtp-step",
-          label = "Step size",
-          min = 0,
-          max = Inf,
-          value = 1000
-        )
-      )
+      fluidRow(column(width = 8,
+                      ### plotly/ceac_plot ----
+                      plotlyOutput("ceac_plot")),
+               column(
+                 width = 4,
+                 div(
+                   width = "100%",
+                   style = "overflow: auto;",
+                   ### dataTable/ceac_table ----
+                   dataTableOutput("ceac_table")
+                 )
+               ))
     ),
-    fluidRow(column(width = 8,
-                    ### plotly/ceac_plot ----
-                    plotlyOutput("ceac_plot")),
-             column(
-               width = 4,
-               div(
-                 width = "100%",
-                 style = "overflow: auto;",
-                 ### dataTable/ceac_table ----
-                 dataTableOutput("ceac_table")
-               )
-             ))
+    conditionalPanel(
+      "input['outcomes-intervention-total-costs'] == '' || input['outcomes-intervention-total-effects'] == '' || input['outcomes-comparator-total-costs'] == '' || input['outcomes-comparator-total-effects'] == ''",
+      bs4Dash::bs4Callout(
+        "You must load a data set and select total costs and effects variables for the intervention and comparator conditions before a cost-effectiveness acceptability curve can be created.",
+        title = "Select outcome variables",
+        status = "info",
+        width = 12
+      )
+    )
   ),
   ## Convergence ----
   box(
     width = 12,
     title = "Convergence check",
+    collapsed = TRUE,
     fluidRow(
       column(
         width = 4,
@@ -222,7 +258,7 @@ outcomesUI <- tabItem(
           "outcomes-convergence-variable",
           label = "Outcome variable",
           multiple = FALSE,
-          choices = c()
+          choices = c("no data loaded..." = "")
         )
       ),
       column(
@@ -248,11 +284,14 @@ outcomesUI <- tabItem(
         )
       )
     ),
-    fluidRow(column(
-      width = 12,
-      ### plotly/convergence_plot ----
-      plotlyOutput("convergence_plot")
-    ))
+    conditionalPanel(
+      "input['outcomes-convergence-variable'] != ''",
+      fluidRow(column(
+        width = 12,
+        ### plotly/convergence_plot ----
+        plotlyOutput("convergence_plot")
+      ))
+    )
   )
 )
 
@@ -277,7 +316,7 @@ outcomesServer <- function(input, output, session, context) {
       "outcomes-intervention-incremental-effects",
       choices = context$model$variables,
       selected = context$outcomes$intervention_incremental_effects
-    ) 
+    )
     
     ### selectizeInput/outcomes-intervention-incremental-costs ----
     updateSelectizeInput(
@@ -292,8 +331,8 @@ outcomesServer <- function(input, output, session, context) {
     #   "outcomes-comparator-incremental-effects",
     #   choices = context$model$variables,
     #   selected = context$outcomes$comparator_incremental_effects
-    # ) 
-    # 
+    # )
+    #
     # ### selectizeInput/outcomes-comparator-incremental-costs ----
     # updateSelectizeInput(
     #   session,
@@ -301,7 +340,7 @@ outcomesServer <- function(input, output, session, context) {
     #   choices = context$model$variables,
     #   selected = context$outcomes$comparator_incremental_costs
     # )
-    # 
+    #
     
     ### selectizeInput/outcomes-intervention-total-effects ----
     updateSelectizeInput(
@@ -404,20 +443,36 @@ outcomesServer <- function(input, output, session, context) {
   ### debounce rapidly changing inputs ----
   ice <- list(
     # only apply changes after 500ms without any change
-    colour = reactive({ input$`outcomes-ice-plane-colour-variable` }) %>% debounce(500),
-    highlights = reactive({ input$`outcomes-iterations-highlight` }) %>% debounce(500),
-    wtp = reactive({ input$`outcomes-willingness-to-pay` }) %>% debounce(500)
+    colour = reactive({
+      input$`outcomes-ice-plane-colour-variable`
+    }) %>% debounce(500),
+    highlights = reactive({
+      input$`outcomes-iterations-highlight`
+    }) %>% debounce(500),
+    wtp = reactive({
+      input$`outcomes-willingness-to-pay`
+    }) %>% debounce(500)
   )
   
   wtp <- list(
-    min = reactive({input$`outcomes-ceac-wtp-min`}) %>% debounce(500),
-    max = reactive({input$`outcomes-ceac-wtp-max`}) %>% debounce(500),
-    step = reactive({input$`outcomes-ceac-wtp-step`}) %>% debounce(500)
+    min = reactive({
+      input$`outcomes-ceac-wtp-min`
+    }) %>% debounce(500),
+    max = reactive({
+      input$`outcomes-ceac-wtp-max`
+    }) %>% debounce(500),
+    step = reactive({
+      input$`outcomes-ceac-wtp-step`
+    }) %>% debounce(500)
   )
   
   convergence <- list(
-    block_size = reactive({input$`outcomes-convergence-block-size`}) %>% debounce(500),
-    threshold = reactive({input$`outcomes-convergence-threshold`}) %>% debounce(500)
+    block_size = reactive({
+      input$`outcomes-convergence-block-size`
+    }) %>% debounce(500),
+    threshold = reactive({
+      input$`outcomes-convergence-threshold`
+    }) %>% debounce(500)
   )
   
   ### ceac_inputs ----
@@ -443,7 +498,7 @@ outcomesServer <- function(input, output, session, context) {
   
   ## OUTPUTS ----
   ### plotly/ice_plane ----
-  output$ice_plane <- renderPlotly({
+  output$ice_plane <- renderPlot({
     if (context$outcomes$intervention_incremental_effects != "" &&
         context$outcomes$intervention_incremental_costs != "") {
       user <- list()
@@ -484,16 +539,17 @@ outcomesServer <- function(input, output, session, context) {
   })
   
   ### plotly/ce_plane ----
-  output$ce_plane <- renderPlotly({
+  output$ce_plane <- renderPlot({
     if (context$outcomes$intervention_total_effects != "" &&
         context$outcomes$comparator_total_effects != "" &&
         context$outcomes$intervention_total_costs != "" &&
         context$outcomes$comparator_total_costs != "") {
-      pacheck::plot_ce(df = context$model$data_filtered() %>% as.data.frame(),
-                       e_int = context$outcomes$intervention_total_effects,
-                       c_int = context$outcomes$intervention_total_costs,
-                       e_comp = context$outcomes$comparator_total_effects,
-                       c_comp = context$outcomes$comparator_total_costs
+      pacheck::plot_ce(
+        df = context$model$data_filtered() %>% as.data.frame(),
+        e_int = context$outcomes$intervention_total_effects,
+        c_int = context$outcomes$intervention_total_costs,
+        e_comp = context$outcomes$comparator_total_effects,
+        c_comp = context$outcomes$comparator_total_costs
       )
     }
   })
@@ -511,7 +567,7 @@ outcomesServer <- function(input, output, session, context) {
   
   ### datatable/ceac_table ----
   output$ceac_table <- renderDataTable({
-    if(!is.null(ceac_inputs())){
+    if (!is.null(ceac_inputs())) {
       df_ceac_out <- ceac_inputs()
       df_ceac_out[, which(names(df_ceac_out) != "WTP_threshold")] <-
         apply(df_ceac_out[, which(names(df_ceac_out) != "WTP_threshold")], 2, function(x)

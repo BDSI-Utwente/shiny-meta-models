@@ -35,3 +35,11 @@ label.radio-inline span {
     bottom: 1px; 
     margin-left: .25em; 
 }
+
+.dense-form-inputs label {
+    font-weight: 500 !important;
+}
+
+.dense-form-inputs .form-group {
+    margin-bottom: 0;
+}

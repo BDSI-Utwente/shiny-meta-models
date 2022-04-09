@@ -1,7 +1,8 @@
 library(plotly)
 library(pacheck)
 
-FIT_TYPES <- c("norm", "beta", "gamma", "lnorm")
+FIT_DISTRIBUTIONS <- c("norm", "beta", "gamma", "lnorm")
+FIT_METHODS <- c("lm", "glm", "loess", "gam", "custom")
 
 source("./functions/cautiously.R")
 check_cautiously <- cautiously(do_quick_check)
@@ -72,33 +73,40 @@ summaryUI <- tabItem(
   ## plotly/summary-distribution-plot ----
   box(
     width = 12,
-    title = "Distributions",
+    title = "Univariate distributions",
     collapsed = TRUE,
-    div(
-      width = "100%",
-      style = "overflow: hidden;",
-      ### selectizeInput/summary-distribution-variable ----
-      selectizeInput(
-        "summary-distribution-variable",
-        "Variable",
-        multiple = FALSE,
-        choices = c()
-      ),
-      ### radioButtons/summary-distribution-type ----
-      radioButtons(
-        "summary-distribution-type",
-        "Plot type",
-        c("density", "histogram"),
-        selected = "density",
-        inline = TRUE
-      ),
-      ### checkboxGroup/summary-distribution-fits ----
-      checkboxGroupInput(
-        "summary-distribution-fits",
-        "Fit to...",
-        choices = c(FIT_TYPES, "custom"),
-        selected = c(FIT_TYPES),
-        inline = TRUE
+    ### selectizeInput/summary-distribution-variable ----
+    selectizeInput(
+      "summary-distribution-variable",
+      "Variable",
+      multiple = FALSE,
+      choices = c("No data loaded..." = "")
+    ),
+    conditionalPanel(
+      "input['summary-distribution-variable'] != ''",
+      fluidRow(
+        column(
+          width = 6,
+          ### radioButtons/summary-distribution-type ----
+          radioButtons(
+            "summary-distribution-type",
+            "Plot type",
+            c("density", "histogram"),
+            selected = "density",
+            inline = TRUE
+          )
+        ),
+        column(
+          width = 6,
+          ### checkboxGroup/summary-distribution-fits ----
+          checkboxGroupInput(
+            "summary-distribution-fits",
+            "Fit to...",
+            choices = c(FIT_DISTRIBUTIONS, "custom"),
+            selected = c(FIT_DISTRIBUTIONS),
+            inline = TRUE
+          )
+        )
       ),
       conditionalPanel(
         "input['summary-distribution-fits'].indexOf('custom') >= 0",
@@ -110,7 +118,7 @@ summaryUI <- tabItem(
               selectizeInput(
                 "summary-distribution-custom-type",
                 label = "Custom fit type",
-                choices = FIT_TYPES
+                choices = FIT_DISTRIBUTIONS
               )
             ),
             column(
@@ -147,7 +155,87 @@ summaryUI <- tabItem(
                  tableOutput("summary-distribution-fit")
                ))
     )
+  ),
+  
+  ## Bivariate distribution ----
+  box(
+    width = 12,
+    title = "Bivariate distributions",
+    collapsed = TRUE,
+    fluidRow(column(
+      6,
+      ### selectize/summary-bivariate-distribution-x-variable ----
+      selectizeInput(
+        "summary-bivariate-distribution-x-variable",
+        "X variable",
+        choices = c("No data loaded..." = "")
+      )
+    ),
+    column(
+      6,
+      ### selectize/summary-bivariate-distribution-y-variable ----
+      selectizeInput(
+        "summary-bivariate-distribution-y-variable",
+        "Y variable",
+        choices = c("No data loaded..." = "")
+      )
+    )),
+    conditionalPanel(
+      "input['summary-bivariate-distribution-x-variable'] != '' && input['summary-bivariate-distribution-y-variable'] != ''",
+      fluidRow(column(
+        ### plotly/summary-bivariate-distribution-plot ----
+        8, plotOutput("summary-bivariate-distribution-plot")
+      ),
+      column(
+        4,
+        h4("Additional options"),
+        div(
+          class = "dense-form-inputs",
+          ### checkbox/summary-bivariate-distribution-check-y-gt-x ----
+          checkboxInput(
+            "summary-bivariate-distribution-check-y-gt-x",
+            span("Check", code("y"), ">", code("x"))
+          ),
+          
+          ### checkbox/summary-bivariate-distribution-fit ----
+          checkboxInput("summary-bivariate-distribution-fit",
+                        "Fit regression line"),
+          conditionalPanel(
+            "input['summary-bivariate-distribution-fit']",
+            
+            ### checkboxGroup/summary-bivariate-distribution-fit-method ----
+            checkboxGroupInput(
+              "summary-bivariate-distribution-fit-method",
+              "Method(s)",
+              choices = FIT_METHODS,
+              inline = TRUE
+            ),
+            conditionalPanel(
+              "input['summary-bivariate-distribution-fit-method'].includes('custom')",
+              fluidRow(column(
+                6,
+                ### numeric/summary-bivariate-distribution-fit-custom-intercept ----
+                numericInput(
+                  "summary-bivariate-distribution-fit-custom-intercept",
+                  "Intercept",
+                  0
+                )
+              ), column(
+                6,
+                ### numeric/summary-bivariate-distribution-fit-custom-slope ----
+                numericInput(
+                  "summary-bivariate-distribution-fit-custom-slope",
+                  "Slope",
+                  1
+                )
+              ))
+            )
+          )
+        )
+      ))
+    )
   )
+  
 )
 
 
@@ -175,6 +263,19 @@ summaryServer <- function(input, output, session, context) {
       selected = context$summary$distribution_variable
     )
   }) %>% bindEvent(context$model$variables)
+  
+  updateBivariateDistributionChoices <- observe({
+    inputs <-
+      c(
+        "summary-bivariate-distribution-x-variable",
+        "summary-bivariate-distribution-y-variable"
+      )
+    update_exclusive_selectize_input_set(context$model$variables, inputs, input, session)
+  }) %>% bindEvent(
+    context$model$variables,
+    input$`summary-bivariate-distribution-x-variable`,
+    input$`summary-bivariate-distribution-y-variable`
+  )
   
   ## SERVER update observers ----
   ### context$summary$distribution_variable ----
@@ -275,7 +376,7 @@ summaryServer <- function(input, output, session, context) {
   
   # TODO: split into separate reactives for correlation matrix and plot so that
   # we can cache plots without negatively affecting other reactives that depend
-  # on the cor matrix 
+  # on the cor matrix
   ## plotly/summary-correlation-matrix ----
   output$`summary-correlation-matrix` <- renderPlotly({
     if (is.null(context$model$data_filtered()) ||
@@ -288,12 +389,12 @@ summaryServer <- function(input, output, session, context) {
       dplyr::select(!!!context$summary$variables)
     
     invalid_cols_non_numeric <- selected_cols %>%
-      dplyr::select(where(~ !is.numeric(.x))) %>%
+      dplyr::select(where( ~ !is.numeric(.x))) %>%
       names()
     
     invalid_cols_no_variance <- selected_cols %>%
       dplyr::select(-any_of(invalid_cols_non_numeric)) %>%
-      dplyr::select(where(~ var(.x, na.rm = TRUE) <= 1e-4)) %>%
+      dplyr::select(where( ~ var(.x, na.rm = TRUE) <= 1e-4)) %>%
       names()
     
     correlation_matrix_tags(bind_rows(
@@ -330,7 +431,7 @@ summaryServer <- function(input, output, session, context) {
   ### html/summary-correlation-matrix-tags ----
   output$`summary-correlation-matrix-tags` <- renderPrint({
     tags <- correlation_matrix_tags()
-
+    
     if (!is.null(tags) && nrow(tags) >= 1) {
       div(
         span(style = "font-size: smaller;", "Excluded variables"),
@@ -341,7 +442,9 @@ summaryServer <- function(input, output, session, context) {
               }))
       )
     }
-  }) %>% bindEvent(correlation_matrix_tags(), ignoreInit = FALSE, ignoreNULL = FALSE)
+  }) %>% bindEvent(correlation_matrix_tags(),
+                   ignoreInit = FALSE,
+                   ignoreNULL = FALSE)
   
   
   ### plotly/summary-distribution-plot ----
@@ -351,8 +454,10 @@ summaryServer <- function(input, output, session, context) {
       user <- list()
       if ('custom' %in% input$`summary-distribution-fits`) {
         user$type <- input$`summary-distribution-custom-type`
-        user$param_1 <- input$`summary-distribution-custom-param-1`
-        user$param_2 <- input$`summary-distribution-custom-param-2`
+        user$param_1 <-
+          input$`summary-distribution-custom-param-1`
+        user$param_2 <-
+          input$`summary-distribution-custom-param-2`
         user$mean <- input$`summary-distribution-custom-mean`
       }
       
@@ -389,7 +494,7 @@ summaryServer <- function(input, output, session, context) {
     cautiously_fit_dist(
       context$model$data_filtered() %>% as.data.frame(),
       context$summary$distribution_variable,
-      input$`summary-distribution-fits` %>% intersect(FIT_TYPES) # filter out custom
+      input$`summary-distribution-fits` %>% intersect(FIT_DISTRIBUTIONS) # filter out custom
     )
   }) %>% debounce(500)
   
@@ -406,10 +511,59 @@ summaryServer <- function(input, output, session, context) {
       .data <- reduce(stats$result, left_join)
       .data %>%
         dplyr::select(-tidyselect::starts_with("Name_")) %>%
-        rename_with( ~ str_remove_all(.x, "Value_") %>%
-                       str_replace_all("_", " ") %>%
-                       str_to_title()) %>%
+        rename_with(~ str_remove_all(.x, "Value_") %>%
+                      str_replace_all("_", " ") %>%
+                      str_to_title()) %>%
         arrange(Distribution)
     }
   })
-}
+  
+  check <- reactive({
+    if(input$`summary-bivariate-distribution-check-y-gt-x`) {
+      return("param_2 > param_1")
+    } 
+    return(NULL)
+  }) %>% throttle(250)
+  
+  fit_methods <- reactive({
+    input$`summary-bivariate-distribution-fit-method`
+  }, label = "fit_methods") %>% throttle(250)
+  
+  fit_custom <- reactive({
+    "custom" %in% fit_methods()
+  }, label = "fit_custom")
+  
+  fit_custom_pars <- reactive({
+    pars <- list()
+    if (fit_custom()) {
+      pars$intercept <-
+        input$`summary-bivariate-distribution-fit-custom-intercept`
+      pars$slope <-
+        input$`summary-bivariate-distribution-fit-custom-slope`
+    }
+    pars
+  }, label = "fit_custom_pars") %>% throttle(250)
+  
+  ### plotly/summary-bivariate-distribution-plot ----
+  output$`summary-bivariate-distribution-plot` <- renderPlot({
+    if (input$`summary-bivariate-distribution-x-variable` != "" &&
+        input$`summary-bivariate-distribution-y-variable` != "") {
+      p <- pacheck::vis_2_params(
+        context$model$data_filtered(),
+        param_1 = input$`summary-bivariate-distribution-x-variable`,
+        param_2 = input$`summary-bivariate-distribution-y-variable`,
+        slope = fit_custom_pars()$slope,
+        intercept = fit_custom_pars()$intercept,
+        check = check()
+      )
+      
+      # pacheck::vis_2_params(...) only allows one type of fit, I don't see why we
+      # should have that restriction.
+      for (type in (fit_methods() %>% setdiff(c("custom")))) {
+        p <- p + geom_smooth(aes(colour = !!type), method = type)
+      }
+      
+      p
+    }})
+  }
+  

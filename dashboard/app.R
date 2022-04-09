@@ -29,8 +29,7 @@ ui <- dashboardPage(
       menuItem(
         "Summary statistics",
         tabName = "summary",
-        icon = icon("search"),
-        selected = TRUE
+        icon = icon("search")
       ),
       menuItem(
         "Model outcomes",
@@ -98,10 +97,13 @@ server <- function(input, output, session) {
                          "probability-variables",
                          selected = context$probability_variables)
     
+    context$relations$outcome_variable <- "inc_qaly"
+    context$relations$predictor_variables <- c(context$model$utility_variables, context$model$probability_variables) %>% setdiff(c("u_d", "p_dd"))
+    
     shiny::removeUI("#test-data-loading .loading")
     shiny::insertUI("#test-data-loading", ui = icon("check", style="color: green;", class="ml-2"), immediate = FALSE)
     
-  }) %>% bindEvent(input$`setup-test-data`)
+  }, label = "test-data-observer") %>% bindEvent(input$`setup-test-data`)
 }
 
 # Run the application
