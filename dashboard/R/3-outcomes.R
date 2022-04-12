@@ -155,7 +155,7 @@ outcomesUI <- tabItem(
       )
     )
   ),
-  ## CE plane ----
+  ## CE plane & NB plots----
   box(
     width = 12,
     title = "Cost-effectiveness plane",
@@ -176,8 +176,68 @@ outcomesUI <- tabItem(
           width = 12
         )
       )
-    ))
-  ),
+    )
+    )
+    ),
+  box(
+    width = 12,
+    title = "Net benefits plane",
+    collapsed = TRUE,
+    conditionalPanel(
+        "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
+        fluidRow(
+          ### numeric/outcomes-nb-wtp ----
+        column(
+          width = 3,
+          numericInput(
+            "outcomes-nb-wtp",
+            label = "Willingness to pay",
+            min = 0,
+            max = Inf,
+            value = 50000
+          )
+        ),
+        ### checkbox/outcomes-nb-nmb ----
+        column(
+          width = 3,
+          checkboxInput(
+            "outcomes-nb-nmb", 
+            label = "Plot NMB?", 
+            value = TRUE
+            )
+          ),
+        ### checkbox/outcomes-nb-comparators ----
+        column(
+          width = 3,
+          checkboxInput(
+            "outcomes-nb-comparators", 
+            label = "Plot curves for each comparator?", 
+            value = TRUE
+            )
+        ),
+        ### checkbox/outcomes-nb-incremental ----
+        column(
+          width = 3,
+          checkboxInput(
+            "outcomes-nb-incremental", 
+            label = "Plot incremental curve?", 
+            value = FALSE
+            )
+        ),
+        ### plotly/nb_plot ----
+        plotOutput("nb_plot")
+      ),
+      conditionalPanel(
+        "input['outcomes-intervention-total-costs'] == '' || input['outcomes-intervention-total-effects'] == '' || input['outcomes-comparator-total-costs'] == '' || input['outcomes-comparator-total-effects'] == ''",
+        bs4Dash::bs4Callout(
+          "You must load a data set and select total costs and effects variables for the intervention and comparator conditions before the net benefit curves can be created.",
+          title = "Select outcome variables",
+          status = "info",
+          width = 12
+        )
+      )
+    )
+    ),
   ## CEAC ----
   box(
     width = 12,
@@ -466,14 +526,46 @@ outcomesServer <- function(input, output, session, context) {
     }) %>% debounce(500)
   )
   
+  nb <- list(
+    wtp = reactive({
+      input$`outcomes-nb-wtp`
+    }) %>% debounce(500),
+    nmb = reactive({
+      input$`outcomes-nb-nmb`
+    }) %>% debounce(500),
+    comparators = reactive({
+      input$`outcomes-nb-comprators`
+    }) %>% debounce(500),
+    incremental = reactive({
+      input$`outcomes-nb-incremental`
+    }) %>% debounce(500)
+  )
+  
   convergence <- list(
     block_size = reactive({
-      input$`outcomes-convergence-block-size`
+      input$`outcomes-nb-wtp`
     }) %>% debounce(500),
     threshold = reactive({
       input$`outcomes-convergence-threshold`
     }) %>% debounce(500)
   )
+  
+  ### nb_inputs ----
+  nb_inputs <- reactive({
+    if (context$outcomes$intervention_total_effects != "" &&
+        context$outcomes$intervention_total_costs != "" &&
+        context$outcomes$comparator_total_effects != "" &&
+        context$outcomes$comparator_total_costs != "") {
+      pacheck::calculate_nb(
+        df = context$model$data_filtered() %>% as.data.frame(),
+        e_int = context$outcomes$intervention_total_effects,
+        c_int = context$outcomes$intervention_total_costs,
+        e_comp = context$outcomes$comparator_total_effects,
+        c_comp = context$outcomes$comparator_total_costs,
+        wtp = nbp$wtp()
+      )
+    }
+  })
   
   ### ceac_inputs ----
   ceac_inputs <- reactive({
@@ -550,6 +642,22 @@ outcomesServer <- function(input, output, session, context) {
         c_int = context$outcomes$intervention_total_costs,
         e_comp = context$outcomes$comparator_total_effects,
         c_comp = context$outcomes$comparator_total_costs
+      )
+    }
+  })
+  
+  
+  ### plotly/nb_plot ----
+  output$nb_plot <- renderPlot({
+    if (context$outcomes$intervention_total_effects != "" &&
+        context$outcomes$comparator_total_effects != "" &&
+        context$outcomes$intervention_total_costs != "" &&
+        context$outcomes$comparator_total_costs != "") {
+      pacheck::plot_nb(
+        df = nb_inputs(),
+        NMB = nb$nmb(),
+        comparators = nb$comparators(),
+        incremental = nb$incremental()
       )
     }
   })
