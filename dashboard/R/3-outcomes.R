@@ -155,7 +155,7 @@ outcomesUI <- tabItem(
       )
     )
   ),
-  ## CE plane & NB plots----
+  ## CE plane ----
   box(
     width = 12,
     title = "Cost-effectiveness plane",
@@ -543,7 +543,7 @@ outcomesServer <- function(input, output, session, context) {
   
   convergence <- list(
     block_size = reactive({
-      input$`outcomes-nb-wtp`
+      input$`outcomes-convergence-block-size`
     }) %>% debounce(500),
     threshold = reactive({
       input$`outcomes-convergence-threshold`
@@ -562,7 +562,7 @@ outcomesServer <- function(input, output, session, context) {
         c_int = context$outcomes$intervention_total_costs,
         e_comp = context$outcomes$comparator_total_effects,
         c_comp = context$outcomes$comparator_total_costs,
-        wtp = nbp$wtp()
+        wtp = nb$wtp()
       )
     }
   })
