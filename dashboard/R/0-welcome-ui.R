@@ -15,6 +15,6 @@ welcomeUI <- tabItem(
     p("The Model outcomes-tab: displays the incremental cost-effectiveness plane and the cost-effectiveness acceptability curve and other visuals to investigate your model outcomes."),
     p("The Relations-tab: investigate the relation between model inputs and outputs using interactive graphs and metamodelling."),
     p("The Meta-model predictions-tab: use the metamodel you have fitted to make predictions."),
-    p("In case you are only curious, you can use the pre-loaded data, by clicking the 'Use test data' button on the 'Prepare data'-tab.")
+    p("In case you are only curious, you can use the pre-loaded data, by clicking the 'Use test data' button on the top of the tabs.")
   )
 )
