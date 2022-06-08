@@ -237,16 +237,73 @@ summaryUI <- tabItem(
         )
       ))
     )
+  ),
+  ## Sum of variables ----
+  box(
+    width = 12,
+    title = "Check sum of probabilities",
+    collapsed = TRUE,
+    p(
+      class = "text-muted",
+      "In this box, you can sum up multiple probability variables to check whether they remain lower than or are equal to 1"
+    ),
+    fluidRow(column(
+      6,
+      ### selectize/summary-variables-for-sum ----
+      selectizeInput(
+        "summary-variables-for-sum",
+        "Variables to sum up with each other",
+        choices = c("no data loaded..." = ""),
+        multiple = TRUE
+      )
+    ),
+    column(
+      6,
+      ### numeric/summary-number-digits-sum ----
+      numericInput(
+        "summary-number-digits-sum",
+        "Number of digits for rounding", 
+        value = 9999,
+        min = 0,
+        max = Inf,
+        step = 1
+      )
+    ),
+    column(
+      6,
+      ### checkbox/summary-checkbox-sum-equal-one ----
+      checkboxInput(
+        "summary-checkbox-sum-equal-one",
+        "Check whether sum is strictly equal to 1 (other lower or equal is checked)",
+        value = FALSE
+      )
+    ),
+    column(
+      6,
+      ### numeric/summary-max-view-number-error ----
+      numericInput(
+        "summary-max-view-number-error",
+        "Number of error to display",
+        value = 100,
+        min = 0,
+        max = Inf
+      )
+    ),
+    column(
+      12,
+      ### text/summary-sum-p-text
+      textOutput("summary-sum-p-text")
+    )
+    )
   )
-  
 )
-
-
 
 # SERVER ------------------------------------------------------------------
 summaryServer <- function(input, output, session, context) {
   context$summary <- reactiveValues(variables = c(),
-                                    distribution_variable = "")
+                                    distribution_variable = "",
+                                    summary_variables_for_sum = c()
+                                    )
   
   ## UI update observers ----
   updateSummaryVariableChoices <- observe({
@@ -265,6 +322,15 @@ summaryServer <- function(input, output, session, context) {
       choices = context$model$variables,
       selected = context$summary$distribution_variable
     )
+    
+    ### selectizeInput/summary-variables-for-sum ----
+     updateSelectizeInput(
+       session,
+       "summary-variables-for-sum",
+       choices = context$model$variables,
+       selected = context$summary$summary_variables_for_sum
+    )
+    
   }) %>% bindEvent(context$model$variables)
   
   updateBivariateDistributionChoices <- observe({
@@ -291,6 +357,28 @@ summaryServer <- function(input, output, session, context) {
   updateSummaryStatisticsVariables <- observe({
     context$summary$variables <- input$`summary-statistics-variables`
   }) %>% bindEvent(input$`summary-statistics-variables`)
+  
+  ### context$summary$summary_variables_for_sum ----
+  updateSummaryVariablesForSum <- observe({
+    context$summary$summary_variables_for_sum <- input$`summary-variables-for-sum`
+  }) %>% bindEvent(input$`summary-variables-for-sum`)
+  
+  
+  ## SERVER update reactive ----
+  
+  ### debounce rapidly changing inputs ----
+  sum_p_variables <- list(
+    # only apply changes after 500ms without any change
+    digits = reactive({
+      input$`summary-number-digits-sum`
+    }) %>% debounce(500),
+    check = reactive({
+      ifelse(input$`summary-checkbox-sum-equal-one` == TRUE, "equal", "lower") 
+    }) %>% debounce(500),
+    max_view = reactive({
+      input$`summary-max-view-number-error`
+    }) %>% debounce(500)
+  )
   
   ## UI event handlers ----
   ### action/summary-add-cost-variables ----
@@ -578,5 +666,18 @@ summaryServer <- function(input, output, session, context) {
       
       p
     }})
-  }
   
+  ### text/summary-bivariate-distribution-plot ----
+  output$`summary-sum-p-text` <- renderText({
+    if(context$summary$summary_variables_for_sum %>% length() > 0){
+      pacheck::check_sum_probs(
+        context$summary$summary_variables_for_sum,
+        df       = context$model$data_filtered(),
+        digits   = sum_p_variables$digits(),
+        check    = sum_p_variables$check(),
+        max_view = sum_p_variables$max_view() 
+      )
+    }
+  })
+}
+
