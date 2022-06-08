@@ -33,6 +33,9 @@ summaryUI <- tabItem(
       ### action/summary-add-utility-variables ----
       actionButton("summary-add-utility-variables", "Utilities"),
       
+      ### action/summary-add-disutility-variables ----
+      actionButton("summary-add-disutility-variables", "Disutilities"),
+      
       ### action/summary-add-probability-variables ----
       actionButton("summary-add-probability-variables", "Probabilities"),
       
@@ -308,6 +311,16 @@ summaryServer <- function(input, output, session, context) {
                          "summary-statistics-variables",
                          selected = context$summary$variables)
   }) %>% bindEvent(input$`summary-add-utility-variables`)
+  
+  ### action/summary-add-disutility-variables ----
+  addDisutilityVariables <- observe({
+    context$summary$variables <-
+      c(context$summary$variables,
+        context$model$disutility_variables) %>% unique()
+    updateSelectizeInput(session,
+                         "summary-statistics-variables",
+                         selected = context$summary$variables)
+  }) %>% bindEvent(input$`summary-add-disutility-variables`)
   
   ### action/summary-add-probability-variables ----
   addProbabilityVariables <- observe({
