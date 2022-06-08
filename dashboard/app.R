@@ -29,7 +29,7 @@ ui <- dashboardPage(
                tabName = "data",
                icon = icon("upload")),
       menuItem(
-        "Summary statistics",
+        "Data inspection",
         tabName = "summary",
         icon = icon("search")
       ),
