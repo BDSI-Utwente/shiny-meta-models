@@ -68,6 +68,12 @@ dataUI <- tabItem(
       multiple = TRUE
     ),
     selectizeInput(
+      "disutility-variables",
+      "Disutilities",
+      choices = c("loading..."),
+      multiple = TRUE
+    ),
+    selectizeInput(
       "probability-variables",
       "Probabilities",
       choices = c("loading..."),
@@ -119,6 +125,7 @@ dataServer <- function(input, output, session, context) {
     variables = c(),
     cost_variables = c(),
     utility_variables = c(),
+    disutility_variables = c(),
     probability_variables = c(),
     relative_effect_variables = c(),
     scenario_variable = "",
@@ -239,6 +246,10 @@ dataServer <- function(input, output, session, context) {
     context$model$utility_variables <- input$`utility-variables`
   }) %>% bindEvent(input$`utility-variables`)
   
+  updateDisutilityVariables <- observe({
+    context$model$disutility_variables <- input$`disutility-variables`
+  }) %>% bindEvent(input$`disutility-variables`)
+  
   updateProbabilityVariables <- observe({
     context$model$probability_variables <- input$`probability-variables`
   }) %>% bindEvent(input$`probability-variables`)
@@ -256,6 +267,7 @@ dataServer <- function(input, output, session, context) {
     c(
       context$model$cost_variables,
       context$model$utility_variables,
+      context$model$disutility_variables,
       context$model$probability_variables,
       context$model$relative_effectiveness_variables,
       context$model$scenario_variable
@@ -266,6 +278,7 @@ dataServer <- function(input, output, session, context) {
     set <- c(
       "cost-variables",
       "utility-variables",
+      "disutility-variables",
       "probability-variables",
       "relative-effectiveness-variables",
       "scenario-variable"
@@ -273,6 +286,7 @@ dataServer <- function(input, output, session, context) {
     selected <- list(
       `cost-variables` = context$model$cost_variables,
       `utility-variables` = context$model$utility_variables,
+      `disutility-variables` = context$model$disutility_variables,
       `probability-variables` = context$model$probability_variables,
       `relative-effectiveness-variables` = context$model$relative_effectiveness_variables,
       `scenario-variable` = context$model$scenario_variable
@@ -333,6 +347,19 @@ dataServer <- function(input, output, session, context) {
     } else {
       checks$utilities <-
         list(messages = tibble(ok = FALSE, message = "no variables were marked as utilities"))
+    }
+    
+    if (context$model$disutility_variables %>% length()) {
+      checks$util_pos <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$model$disutility_variables,
+        ~ .x < 0,
+        "negative",
+        "all disutilities are {label_check}"
+      )
+    } else {
+      checks$disutilities <-
+        list(messages = tibble(ok = FALSE, message = "no variables were marked as disutilities"))
     }
     
     if (context$model$relative_effectiveness_variables %>% length()) {
