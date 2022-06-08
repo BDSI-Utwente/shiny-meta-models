@@ -69,7 +69,7 @@ dataUI <- tabItem(
     ),
     selectizeInput(
       "disutility-variables",
-      "Disutilities",
+      "Disutilities (when implemented as negative values, otherwise consider disutilities as utility variables)",
       choices = c("loading..."),
       multiple = TRUE
     ),
