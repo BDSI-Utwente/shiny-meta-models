@@ -149,15 +149,21 @@ summaryUI <- tabItem(
       ),
       fluidRow(### plotly/summary-distribution-plot ----
                column(
-                 width = 6, plotlyOutput("summary-distribution-plot")
-               ),
-               
+                 width = 6, 
+                 plotOutput("summary-distribution-plot"
+                            # , 
+                            # brushOpts("plot_brush",
+                            #           direction = "x")
+                            )
+                 ),
                ### dataTable/summary-distribution-stats ----
                column(
                  width = 6,
-                 tableOutput("summary-distribution-fit")
-               ))
-    )
+                 tableOutput("summary-distribution-fit"),
+                 #verbatimTextOutput("brush-info")
+               )
+               )
+      )
   ),
   
   ## Bivariate distribution ----
@@ -549,7 +555,7 @@ summaryServer <- function(input, output, session, context) {
   
   
   ### plotly/summary-distribution-plot ----
-  output$`summary-distribution-plot` <- renderPlotly({
+  output$`summary-distribution-plot` <- renderPlot({
     if (!is.null(context$model$data_filtered()) &&
         context$summary$distribution_variable != "") {
       user <- list()
@@ -678,6 +684,13 @@ summaryServer <- function(input, output, session, context) {
         max_view = sum_p_variables$max_view() 
       )
     }
+  })
+  
+  output$`brush-info` <- renderPrint({
+    
+    df <- brushedPoints(context$model$data_filtered(), input$plot_brush, xvar = context$summary$distribution_variable)
+    summary(df)
+    
   })
 }
 
