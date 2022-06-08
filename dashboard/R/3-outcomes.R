@@ -11,7 +11,7 @@ outcomesUI <- tabItem(
     title = "Incremental cost-effectiveness plane",
     collapsed = TRUE,
     conditionalPanel(
-      "input['outcomes-intervention-incremental-costs'] != '' && input['outcomes-intervention-incremental-effects'] != ''",
+      "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
       fluidRow(
         column(
           width = 3,
@@ -55,9 +55,9 @@ outcomesUI <- tabItem(
     ),
     
     conditionalPanel(
-      "input['outcomes-intervention-incremental-costs'] == '' || input['outcomes-intervention-incremental-effects'] == ''",
+      "input['outcomes-intervention-total-costs'] != '' || input['outcomes-intervention-total-effects'] != '' || input['outcomes-comparator-total-costs'] != '' || input['outcomes-comparator-total-effects'] != ''",
       bs4Dash::bs4Callout(
-        "You must load a data set and select incremental costs and effects variables before an incremental cost-effectiveness plane can be created.",
+        "You must load a data set and select total costs and effects variables for the intervention and comparator conditions before a cost-effectiveness plane can be created.",
         title = "Select outcome variables",
         status = "info",
         width = 12
