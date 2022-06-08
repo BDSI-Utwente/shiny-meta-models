@@ -47,13 +47,14 @@ dataUI <- tabItem(
   #     )
   # ),
   
+  ## input vars ----
   # categorize variables
   box(
     title = "Categorize input variables",
     width = 12,
     p(
       class = "text-muted",
-      "Please mark variables as a cost, utility or probability to aid further analysis"
+      "Please indicate which variables are costs, (dis)utility, probability, or relative effectiveness inputs for further analysis"
     ),
     selectizeInput(
       "cost-variables",
