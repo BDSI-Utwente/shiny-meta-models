@@ -335,6 +335,18 @@ dataServer <- function(input, output, session, context) {
         list(messages = tibble(ok = FALSE, message = "no variables were marked as utilities"))
     }
     
+    if (context$model$relative_effectiveness_variables %>% length()) {
+      checks$rel_eff_pos <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$model$relative_effectiveness_variables,
+        ~ .x >= 0,
+        "positive",
+        "all RR, OR, and HR are {label_check}"
+      )
+    } else {
+      checks$relative_effectiveness <-
+        list(messages = tibble(ok = FALSE, message = "no variables were marked as RR, OR, HR"))
+    }
     
     msgs <- checks %>%
       map_dfr("messages") %>%
