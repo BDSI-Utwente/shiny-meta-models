@@ -5,97 +5,6 @@ library(pacheck)
 outcomesUI <- tabItem(
   "outcomes",
   
-  ## outcome vars ----
-  box(
-    title = "Select outcome variables",
-    width = 12,
-    span(
-      class = "text-muted",
-      "Please select variables representing total and incremental costs and effects for both the comparator and intervention conditions."
-    ),
-    # fluidRow(
-    #   column(
-    #     6,
-    h4("Intervention"),
-    fluidRow(column(
-      6,
-      ### selectize/outcomes-intervention-total-costs ----
-      selectizeInput(
-        "outcomes-intervention-total-costs",
-        "Total costs",
-        choices = c("no data loaded..." = "")
-      )
-    ),
-    column(
-      6,
-      ### selectize/outcomes-intervention-total-effects ----
-      selectizeInput(
-        "outcomes-intervention-total-effects",
-        "Total effects",
-        choices = c("no data loaded..." = "")
-      )
-    )),
-    fluidRow(column(
-      6,
-      ### selectize/outcomes-intervention-incremental-costs ----
-      selectizeInput(
-        "outcomes-intervention-incremental-costs",
-        "Incremental costs",
-        choices = c("no data loaded..." = "")
-      )
-    ),
-    column(
-      6,
-      ### selectize/outcomes-intervention-incremental-effects ----
-      selectizeInput(
-        "outcomes-intervention-incremental-effects",
-        "Incremental effects",
-        choices = c("no data loaded..." = "")
-      )
-    )),
-    # ),
-    # column(
-    #   6,
-    h4("Comparator"),
-    fluidRow(column(
-      6,
-      ### selectize/outcomes-comparator-total-costs ----
-      selectizeInput(
-        "outcomes-comparator-total-costs",
-        "Total costs",
-        choices = c("no data loaded..." = "")
-      )
-    ),
-    column(
-      6,
-      ### selectize/outcomes-comparator-total-effects ----
-      selectizeInput(
-        "outcomes-comparator-total-effects",
-        "Total effects",
-        choices = c("no data loaded..." = "")
-      )
-    )) #,
-    # fluidRow(
-    #   column(
-    #     6,
-    #     selectizeInput(
-    #       "outcomes-comparator-incremental-costs",
-    #       "Incremental costs",
-    #       choices = c("no data loaded..." = "")
-    #     )
-    #   ),
-    #   column(
-    #     6,
-    #     selectizeInput(
-    #       "outcomes-comparator-incremental-effects",
-    #       "Incremental effects",
-    #       choices = c("no data loaded..." = "")
-    #     )
-    #   )
-    # )
-    #   )
-    # )
-  ),
   ## ICE plane ----
   box(
     width = 12,
@@ -386,22 +295,6 @@ outcomesServer <- function(input, output, session, context) {
       choices = context$model$variables,
       selected = context$outcomes$intervention_incremental_costs
     )
-    # ### selectizeInput/outcomes-comparator-incremental-effects ----
-    # updateSelectizeInput(
-    #   session,
-    #   "outcomes-comparator-incremental-effects",
-    #   choices = context$model$variables,
-    #   selected = context$outcomes$comparator_incremental_effects
-    # )
-    #
-    # ### selectizeInput/outcomes-comparator-incremental-costs ----
-    # updateSelectizeInput(
-    #   session,
-    #   "outcomes-comparator-incremental-costs",
-    #   choices = context$model$variables,
-    #   selected = context$outcomes$comparator_incremental_costs
-    # )
-    #
     
     ### selectizeInput/outcomes-intervention-total-effects ----
     updateSelectizeInput(
@@ -592,8 +485,10 @@ outcomesServer <- function(input, output, session, context) {
   ## OUTPUTS ----
   ### plotly/ice_plane ----
   output$ice_plane <- renderPlot({
-    if (context$outcomes$intervention_incremental_effects != "" &&
-        context$outcomes$intervention_incremental_costs != "") {
+    if (context$outcomes$intervention_total_effects != "" &&
+        context$outcomes$comparator_total_effects != "" &&
+        context$outcomes$intervention_total_costs != "" &&
+        context$outcomes$comparator_total_costs != "") {
       user <- list()
       user$colour <-
         if (ice$colour() != "") {
@@ -610,8 +505,10 @@ outcomesServer <- function(input, output, session, context) {
       
       pacheck::plot_ice(
         df = context$model$data_filtered() %>% as.data.frame(),
-        param_1 = context$outcomes$intervention_incremental_effects,
-        param_2 = context$outcomes$intervention_incremental_costs,
+        e_int = context$outcomes$intervention_total_effects,
+        c_int = context$outcomes$intervention_total_costs,
+        e_comp = context$outcomes$comparator_total_effects,
+        c_comp = context$outcomes$comparator_total_costs,
         col = user$colour,
         n_it = user$n_it,
         wtp = ice$wtp()
