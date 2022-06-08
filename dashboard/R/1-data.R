@@ -49,7 +49,7 @@ dataUI <- tabItem(
   
   # categorize variables
   box(
-    title = "Categorize variables",
+    title = "Categorize input variables",
     width = 12,
     p(
       class = "text-muted",
@@ -90,6 +90,78 @@ dataUI <- tabItem(
       "If there are multiple scenarios, please select the variable that identifies the scenario."
     ),
     selectizeInput("scenario-variable", "Scenario", choices = c("loading..."))
+  ),
+  
+  ## outcome vars ----
+  box(
+    title = "Select outcome variables",
+    width = 12,
+    span(
+      class = "text-muted",
+      "Please select variables representing total and incremental costs and effects for both the comparator and intervention conditions."
+    ),
+    # fluidRow(
+    #   column(
+    #     6,
+    h4("Intervention"),
+    fluidRow(column(
+      6,
+      ### selectize/outcomes-intervention-total-costs ----
+      selectizeInput(
+        "outcomes-intervention-total-costs",
+        "Total costs",
+        choices = c("no data loaded..." = "")
+      )
+    ),
+    column(
+      6,
+      ### selectize/outcomes-intervention-total-effects ----
+      selectizeInput(
+        "outcomes-intervention-total-effects",
+        "Total effects",
+        choices = c("no data loaded..." = "")
+      )
+    )),
+    fluidRow(column(
+      6,
+      ### selectize/outcomes-intervention-incremental-costs ----
+      selectizeInput(
+        "outcomes-intervention-incremental-costs",
+        "Incremental costs",
+        choices = c("no data loaded..." = "")
+      )
+    ),
+    column(
+      6,
+      ### selectize/outcomes-intervention-incremental-effects ----
+      selectizeInput(
+        "outcomes-intervention-incremental-effects",
+        "Incremental effects",
+        choices = c("no data loaded..." = "")
+      )
+    )),
+    # ),
+    # column(
+    #   6,
+    h4("Comparator"),
+    fluidRow(column(
+      6,
+      ### selectize/outcomes-comparator-total-costs ----
+      selectizeInput(
+        "outcomes-comparator-total-costs",
+        "Total costs",
+        choices = c("no data loaded..." = "")
+      )
+    ),
+    column(
+      6,
+      ### selectize/outcomes-comparator-total-effects ----
+      selectizeInput(
+        "outcomes-comparator-total-effects",
+        "Total effects",
+        choices = c("no data loaded..." = "")
+      )
+    )) 
   ),
   
   ## choose scenario ----
