@@ -106,63 +106,116 @@ dataUI <- tabItem(
     #     6,
     h4("Intervention"),
     fluidRow(column(
-      6,
-      ### selectize/outcomes-intervention-total-costs ----
+      4,
+      ### selectize/outcomes-intervention-total-discounted-qalys ----
       selectizeInput(
-        "outcomes-intervention-total-costs",
-        "Total costs",
+        "outcomes-intervention-total-discounted-qalys",
+        "Total discounted QALYs",
         choices = c("no data loaded..." = "")
       )
+    ),column(
+      4,
+      ### selectize/outcomes-intervention-total-discounted-lys ----
+      selectizeInput(
+        "outcomes-intervention-total-discounted-lys",
+        "Total discounted LYs",
+        choices = c("no data loaded..." = "")
+      )
+    ),column(
+      4,
+      ### selectize/outcomes-intervention-total-discounted-costs ----
+      selectizeInput(
+        "outcomes-intervention-total-discounted-costs",
+        "Total undiscounted costs",
+        choices = c("no data loaded..." = "")
+      )
+    )
     ),
-    column(
-      6,
-      ### selectize/outcomes-intervention-total-effects ----
-      selectizeInput(
-        "outcomes-intervention-total-effects",
-        "Total effects",
-        choices = c("no data loaded..." = "")
-      )
-    )),
     fluidRow(column(
-      6,
-      ### selectize/outcomes-intervention-incremental-costs ----
+      4,
+      ### selectize/outcomes-intervention-total-undiscounted-qalys ----
       selectizeInput(
-        "outcomes-intervention-incremental-costs",
-        "Incremental costs",
+        "outcomes-intervention-total-undiscounted-qalys",
+        "Total undiscounted QALYs",
         choices = c("no data loaded..." = "")
       )
     ),
     column(
-      6,
-      ### selectize/outcomes-intervention-incremental-effects ----
+      4,
+      ### selectize/outcomes-intervention-total-undiscounted-lys ----
       selectizeInput(
-        "outcomes-intervention-incremental-effects",
-        "Incremental effects",
+        "outcomes-intervention-total-undiscounted-life-years",
+        "Total undiscounted LYs",
         choices = c("no data loaded..." = "")
       )
-    )),
-    # ),
-    # column(
-    #   6,
+    ),
+    column(
+      4,
+      ### selectize/outcomes-intervention-total-undiscounted-costs ----
+      selectizeInput(
+        "outcomes-intervention-total-undiscounted-costs",
+        "Total undiscounted costs",
+        choices = c("no data loaded..." = "")
+      )
+    )
+    ),
     h4("Comparator"),
     fluidRow(column(
-      6,
-      ### selectize/outcomes-comparator-total-costs ----
+      4,
+      ### selectize/outcomes-comparator-total-discounted-qalys ----
       selectizeInput(
-        "outcomes-comparator-total-costs",
-        "Total costs",
+        "outcomes-comparator-total-discounted-qalys",
+        "Total discounted QALYs",
         choices = c("no data loaded..." = "")
       )
     ),
     column(
-      6,
-      ### selectize/outcomes-comparator-total-effects ----
+      4,
+      ### selectize/outcomes-comparator-total-discounted-lys ----
       selectizeInput(
-        "outcomes-comparator-total-effects",
-        "Total effects",
+        "outcomes-comparator-total-discounted-lys",
+        "Total discounted LYs",
         choices = c("no data loaded..." = "")
       )
-    )) 
+    ),
+    column(
+      4,
+      ### selectize/outcomes-comparator-total-discounted-costs ----
+      selectizeInput(
+        "outcomes-comparator-total-discounted-costs",
+        "Total discounted costs",
+        choices = c("no data loaded..." = "")
+      )
+    ),
+    fluidRow(column(
+      4,
+      ### selectize/outcomes-comparator-total-undiscounted-qalys ----
+      selectizeInput(
+        "outcomes-comparator-total-undiscounted-qalys",
+        "Total undiscounted QALYs",
+        choices = c("no data loaded..." = "")
+      )
+    ),
+    column(
+      4,
+      ### selectize/outcomes-comparator-total-undiscounted-lys ----
+      selectizeInput(
+        "outcomes-comparator-total-undiscounted-lys",
+        "Total undiscounted LYs",
+        choices = c("no data loaded..." = "")
+      )
+    ),
+    column(
+      4,
+      ### selectize/outcomes-comparator-total-undiscounted-costs ----
+      selectizeInput(
+        "outcomes-comparator-total-undiscounted-costs",
+        "Total undiscounted costs",
+        choices = c("no data loaded..." = "")
+      )
+    )
+    
+    ) 
   ),
   
   ## choose scenario ----

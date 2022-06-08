@@ -267,66 +267,117 @@ outcomesUI <- tabItem(
 # SERVER ------------------------------------------------------------------
 outcomesServer <- function(input, output, session, context) {
   context$outcomes <- reactiveValues(
-    intervention_incremental_effects = "",
-    intervention_incremental_costs = "",
-    intervention_total_effects = "",
-    intervention_total_costs = "",
-    # comparator_incremental_effects = "",
-    # comparator_incremental_costs = "",
-    comparator_total_effects = "",
-    comparator_total_costs = ""
+    intervention_total_discounted_qalys = "",
+    intervention_total_discounted_lys = "",
+    intervention_total_discounted_costs = "",
+    intervention_total_undiscounted_qalys = "",
+    intervention_total_undiscounted_lys = "",
+    intervention_total_undiscounted_costs = "",
+    comparator_total_discounted_qalys = "",
+    comparator_total_discounted_lys = "",
+    comparator_total_discounted_costs = "",
+    comparator_total_undiscounted_qalys = "",
+    comparator_total_undiscounted_lys = "",
+    comparator_total_undiscounted_costs = "",
   )
   
   ## UI update observers ----
   updateICEplaneVariableChoices <- observe({
-    ### selectizeInput/outcomes-intervention-incremental-effects ----
+    ### selectizeInput/outcomes-intervention-total-discounted-qalys ----
     updateSelectizeInput(
       session,
-      "outcomes-intervention-incremental-effects",
+      "outcomes-intervention-total-discounted-qalys",
       choices = context$model$variables,
-      selected = context$outcomes$intervention_incremental_effects
+      selected = context$outcomes$intervention_total_discounted_qalys
     )
     
-    ### selectizeInput/outcomes-intervention-incremental-costs ----
+    ### selectizeInput/outcomes-intervention-total-discounted-lys ----
     updateSelectizeInput(
       session,
-      "outcomes-intervention-incremental-costs",
+      "outcomes-intervention-total-discounted-lys",
       choices = context$model$variables,
-      selected = context$outcomes$intervention_incremental_costs
+      selected = context$outcomes$intervention_total_discounted_lys
     )
     
-    ### selectizeInput/outcomes-intervention-total-effects ----
+    ### selectizeInput/outcomes-intervention-total-discounted-costs ----
     updateSelectizeInput(
       session,
-      "outcomes-intervention-total-effects",
+      "outcomes-intervention-total-discounted-costs",
       choices = context$model$variables,
-      selected = context$outcomes$intervention_total_effects
+      selected = context$outcomes$intervention_total_discounted_costs
     )
     
-    ### selectizeInput/outcomes-comparator-total-effects ----
+    ### selectizeInput/outcomes-intervention-total-undiscounted-qalys ----
     updateSelectizeInput(
       session,
-      "outcomes-comparator-total-effects",
+      "outcomes-intervention-total-undiscounted-qalys",
       choices = context$model$variables,
-      selected = context$outcomes$comparator_total_effects
+      selected = context$outcomes$intervention_total_undiscounted_qalys
     )
     
-    ### selectizeInput/outcomes-intervention-total-costs ----
+    ### selectizeInput/outcomes-intervention-total-undiscounted-lys ----
     updateSelectizeInput(
       session,
-      "outcomes-intervention-total-costs",
+      "outcomes-intervention-total-undiscounted-lys",
       choices = context$model$variables,
-      selected = context$outcomes$intervention_total_costs
+      selected = context$outcomes$intervention_total_undiscounted_lys
     )
     
-    ### selectizeInput/outcomes-comparator-total-costs ----
+    ### selectizeInput/outcomes-intervention-total-undiscounted-costs ----
     updateSelectizeInput(
       session,
-      "outcomes-comparator-total-costs",
+      "outcomes-intervention-total-undiscounted-costs",
       choices = context$model$variables,
-      selected = context$outcomes$comparator_total_costs
+      selected = context$outcomes$intervention_total_undiscounted_costs
     )
     
+    ### selectizeInput/outcomes-comparator-total-discounted-qalys ----
+    updateSelectizeInput(
+      session,
+      "outcomes-comparator-total-discounted-qalys",
+      choices = context$model$variables,
+      selected = context$outcomes$comparator_total_discounted_qalys
+    )
+    
+    ### selectizeInput/outcomes-comparator-total-discounted-lys ----
+    updateSelectizeInput(
+      session,
+      "outcomes-comparator-total-discounted-lys",
+      choices = context$model$variables,
+      selected = context$outcomes$comparator_total_discounted_lys
+    )
+    
+    ### selectizeInput/outcomes-comparator-total-discounted-costs ----
+    updateSelectizeInput(
+      session,
+      "outcomes-comparator-total-discounted-costs",
+      choices = context$model$variables,
+      selected = context$outcomes$comparator_total_discounted_costs
+    )
+    
+    ### selectizeInput/outcomes-comparator-total-undiscounted-qalys ----
+    updateSelectizeInput(
+      session,
+      "outcomes-comparator-total-undiscounted-qalys",
+      choices = context$model$variables,
+      selected = context$outcomes$comparator_total_undiscounted_qalys
+    )
+    
+    ### selectizeInput/outcomes-comparator-total-undiscounted-lys ----
+    updateSelectizeInput(
+      session,
+      "outcomes-comparator-total-undiscounted-lys",
+      choices = context$model$variables,
+      selected = context$outcomes$comparator_total_undiscounted_lys
+    )
+    
+    ### selectizeInput/outcomes-comparator-total-undiscounted-costs ----
+    updateSelectizeInput(
+      session,
+      "outcomes-comparator-total-undiscounted-costs",
+      choices = context$model$variables,
+      selected = context$outcomes$comparator_total_undiscounted_costs
+    )
     ### selectizeInput/outcomes-ice-plane-colour-variable ----
     updateSelectizeInput(
       session,
@@ -355,41 +406,78 @@ outcomesServer <- function(input, output, session, context) {
   }) %>% bindEvent(context$model$variables)
   
   ## SERVER update observers ----
-  ### context$outcomes$intervention_incremental_effects ----
-  updateIncrementalEffectsIntervention <- observe({
-    context$outcomes$intervention_incremental_effects <-
-      input$`outcomes-intervention-incremental-effects`
-  }) %>% bindEvent(input$`outcomes-intervention-incremental-effects`)
   
-  ### context$outcomes$intervention_incremental_costs ----
-  updateIncrementalCostsIntervention <- observe({
-    context$outcomes$intervention_incremental_costs <-
-      input$`outcomes-intervention-incremental-costs`
-  }) %>% bindEvent(input$`outcomes-intervention-incremental-costs`)
+  ### context$outcomes$intervention_total_discounted_qalys ----
+  updateTotalDiscQALYIntervention <- observe({
+    context$outcomes$intervention_total_discounted_qalys <-
+      input$`outcomes-intervention-total-discounted-qalys`
+  }) %>% bindEvent(input$`outcomes-intervention-total-discounted-qalys`)
   
-  ### context$outcomes$intervention_total_effects ----
-  updateTotalEffectsIntervention <- observe({
-    context$outcomes$intervention_total_effects <-
-      input$`outcomes-intervention-total-effects`
-  }) %>% bindEvent(input$`outcomes-intervention-total-effects`)
+  ### context$outcomes$intervention_total_discounted_lys ----
+  updateTotalDiscLYIntervention <- observe({
+    context$outcomes$intervention_total_discounted_lys <-
+      input$`outcomes-intervention-total-discounted-lys`
+  }) %>% bindEvent(input$`outcomes-intervention-total-discounted-lys`)
   
-  ### context$outcomes$comparator_total_effects ----
-  updateTotalEffectsComparator <- observe({
-    context$outcomes$comparator_total_effects <-
-      input$`outcomes-comparator-total-effects`
-  }) %>% bindEvent(input$`outcomes-comparator-total-effects`)
+  ### context$outcomes$intervention_total_discounted_costs ----
+  updateTotalDiscCostsIntervention <- observe({
+    context$outcomes$intervention_total_discounted_costs <-
+      input$`outcomes-intervention-total-discounted-costs`
+  }) %>% bindEvent(input$`outcomes-intervention-total-discounted-costs`)
   
-  ### context$outcomes$intervention_total_costs ----
-  updateTotalCostsIntervention <- observe({
-    context$outcomes$intervention_total_costs <-
-      input$`outcomes-intervention-total-costs`
-  }) %>% bindEvent(input$`outcomes-intervention-total-costs`)
+  ### context$outcomes$intervention_total_undiscounted_qalys ----
+  updateTotalUndiscQALYIntervention <- observe({
+    context$outcomes$intervention_total_undiscounted_qalys <-
+      input$`outcomes-intervention-total-undiscounted-qalys`
+  }) %>% bindEvent(input$`outcomes-intervention-total-undiscounted-qalys`)
   
-  ### context$outcomes$comparator_total_costs ----
-  updateTotalCostsComparator <- observe({
-    context$outcomes$comparator_total_costs <-
-      input$`outcomes-comparator-total-costs`
-  }) %>% bindEvent(input$`outcomes-comparator-total-costs`)
+  ### context$outcomes$intervention_total_undiscounted_lys ----
+  updateTotalUndiscLYIntervention <- observe({
+    context$outcomes$intervention_total_undiscounted_lys <-
+      input$`outcomes-intervention-total-undiscounted-lys`
+  }) %>% bindEvent(input$`outcomes-intervention-total-undiscounted-lys`)
+  
+  ### context$outcomes$intervention_total_undiscounted_costs ----
+  updateTotalUndiscCostsIntervention <- observe({
+    context$outcomes$intervention_total_undiscounted_costs <-
+      input$`outcomes-intervention-total-undiscounted-costs`
+  }) %>% bindEvent(input$`outcomes-intervention-total-undiscounted-costs`)
+  
+  ### context$outcomes$comparator_total_discounted_qalys ----
+  updateTotalDiscQALYComparator <- observe({
+    context$outcomes$comparator_total_discounted_qalys <-
+      input$`outcomes-comparator-total-discounted-qalys`
+  }) %>% bindEvent(input$`outcomes-comparator-total-discounted-qalys`)
+  
+  ### context$outcomes$comparator_total_discounted_lys ----
+  updateTotalDiscLYComparator <- observe({
+    context$outcomes$comparator_total_discounted_lys <-
+      input$`outcomes-comparator-total-discounted-lys`
+  }) %>% bindEvent(input$`outcomes-comparator-total-discounted-lys`)
+  
+  ### context$outcomes$comparator_total_discounted_costs ----
+  updateTotalDiscCostsComparator <- observe({
+    context$outcomes$comparator_total_discounted_costs <-
+      input$`outcomes-comparator-total-discounted-costs`
+  }) %>% bindEvent(input$`outcomes-comparator-total-discounted-costs`)
+  
+  ### context$outcomes$comparator_total_undiscounted_qalys ----
+  updateTotalUndiscQALYComparator <- observe({
+    context$outcomes$comparator_total_undiscounted_qalys <-
+      input$`outcomes-comparator-total-undiscounted-qalys`
+  }) %>% bindEvent(input$`outcomes-comparator-total-undiscounted-qalys`)
+  
+  ### context$outcomes$comparator_total_undiscounted_lys ----
+  updateTotalUndiscLYComparator <- observe({
+    context$outcomes$comparator_total_undiscounted_lys <-
+      input$`outcomes-comparator-total-undiscounted-lys`
+  }) %>% bindEvent(input$`outcomes-comparator-total-undiscounted-lys`)
+  
+  ### context$outcomes$comparator_total_undiscounted_costs ----
+  updateTotalUndiscCostsComparator <- observe({
+    context$outcomes$comparator_total_undiscounted_costs <-
+      input$`outcomes-comparator-total-undiscounted-costs`
+  }) %>% bindEvent(input$`outcomes-comparator-total-undiscounted-costs`)
   
   ## SERVER update reactive ----
   
@@ -445,16 +533,16 @@ outcomesServer <- function(input, output, session, context) {
   
   ### nb_inputs ----
   nb_inputs <- reactive({
-    if (context$outcomes$intervention_total_effects != "" &&
-        context$outcomes$intervention_total_costs != "" &&
-        context$outcomes$comparator_total_effects != "" &&
-        context$outcomes$comparator_total_costs != "") {
+    if (context$outcomes$intervention_total_discounted_qalys != "" &&
+        context$outcomes$intervention_total_discounted_costs != "" &&
+        context$outcomes$comparator_total_discounted_qalys != "" &&
+        context$outcomes$comparator_total_discounted_costs != "") {
       pacheck::calculate_nb(
         df = context$model$data_filtered() %>% as.data.frame(),
-        e_int = context$outcomes$intervention_total_effects,
-        c_int = context$outcomes$intervention_total_costs,
-        e_comp = context$outcomes$comparator_total_effects,
-        c_comp = context$outcomes$comparator_total_costs,
+        e_int = context$outcomes$intervention_total_discounted_qalys,
+        c_int = context$outcomes$intervention_total_discounted_costs,
+        e_comp = context$outcomes$comparator_total_discounted_qalys,
+        c_comp = context$outcomes$comparator_total_discounted_costs,
         wtp = nb$wtp()
       )
     }
@@ -462,16 +550,16 @@ outcomesServer <- function(input, output, session, context) {
   
   ### ceac_inputs ----
   ceac_inputs <- reactive({
-    if (context$outcomes$intervention_total_effects != "" &&
-        context$outcomes$intervention_total_costs != "" &&
-        context$outcomes$comparator_total_effects != "" &&
-        context$outcomes$comparator_total_costs != "") {
+    if (context$outcomes$intervention_total_discounted_qalys != "" &&
+        context$outcomes$intervention_total_discounted_costs != "" &&
+        context$outcomes$comparator_total_discounted_qalys != "" &&
+        context$outcomes$comparator_total_discounted_costs != "") {
       pacheck::calculate_ceac(
         df = context$model$data_filtered() %>% as.data.frame(),
-        e_int = context$outcomes$intervention_total_effects,
-        c_int = context$outcomes$intervention_total_costs,
-        e_comp = context$outcomes$comparator_total_effects,
-        c_comp = context$outcomes$comparator_total_costs,
+        e_int = context$outcomes$intervention_total_discounted_qalys,
+        c_int = context$outcomes$intervention_total_discounted_costs,
+        e_comp = context$outcomes$comparator_total_discounted_qalys,
+        c_comp = context$outcomes$comparator_total_discounted_costs,
         v_wtp = seq(
           from = wtp$min(),
           to = wtp$max(),
@@ -484,10 +572,10 @@ outcomesServer <- function(input, output, session, context) {
   ## OUTPUTS ----
   ### plotly/ice_plane ----
   output$ice_plane <- renderPlot({
-    if (context$outcomes$intervention_total_effects != "" &&
-        context$outcomes$comparator_total_effects != "" &&
-        context$outcomes$intervention_total_costs != "" &&
-        context$outcomes$comparator_total_costs != "") {
+    if (context$outcomes$intervention_total_discounted_qalys != "" &&
+        context$outcomes$intervention_total_discounted_costs != "" &&
+        context$outcomes$comparator_total_discounted_qalys != "" &&
+        context$outcomes$comparator_total_discounted_costs != "") {
       user <- list()
       user$colour <-
         if (ice$colour() != "") {
@@ -504,10 +592,10 @@ outcomesServer <- function(input, output, session, context) {
       
       pacheck::plot_ice(
         df = context$model$data_filtered() %>% as.data.frame(),
-        e_int = context$outcomes$intervention_total_effects,
-        c_int = context$outcomes$intervention_total_costs,
-        e_comp = context$outcomes$comparator_total_effects,
-        c_comp = context$outcomes$comparator_total_costs,
+        e_int = context$outcomes$intervention_total_discounted_qalys,
+        c_int = context$outcomes$intervention_total_discounted_costs,
+        e_comp = context$outcomes$comparator_total_discounted_qalys,
+        c_comp = context$outcomes$comparator_total_discounted_costs,
         col = user$colour,
         n_it = user$n_it,
         wtp = ice$wtp()
@@ -517,32 +605,32 @@ outcomesServer <- function(input, output, session, context) {
   
   ###datatable/ice_summary ----
   output$ice_summary <- renderTable({
-    if (context$outcomes$intervention_total_effects != "" &&
-        context$outcomes$comparator_total_effects != "" &&
-        context$outcomes$intervention_total_costs != "" &&
-        context$outcomes$comparator_total_costs != "") {
+    if (context$outcomes$intervention_total_discounted_qalys != "" &&
+        context$outcomes$intervention_total_discounted_costs != "" &&
+        context$outcomes$comparator_total_discounted_qalys != "" &&
+        context$outcomes$comparator_total_discounted_costs != "") {
       pacheck::summary_ice(
         df = context$model$data_filtered() %>% as.data.frame(),
-        e_int = context$outcomes$intervention_total_effects,
-        c_int = context$outcomes$intervention_total_costs,
-        e_comp = context$outcomes$comparator_total_effects,
-        c_comp = context$outcomes$comparator_total_costs
+        e_int = context$outcomes$intervention_total_discounted_qalys,
+        c_int = context$outcomes$intervention_total_discounted_costs,
+        e_comp = context$outcomes$comparator_total_discounted_qalys,
+        c_comp = context$outcomes$comparator_total_discounted_costs
       )
     }
   })
   
   ### plotly/ce_plane ----
   output$ce_plane <- renderPlot({
-    if (context$outcomes$intervention_total_effects != "" &&
-        context$outcomes$comparator_total_effects != "" &&
-        context$outcomes$intervention_total_costs != "" &&
-        context$outcomes$comparator_total_costs != "") {
+    if (context$outcomes$intervention_total_discounted_qalys != "" &&
+        context$outcomes$intervention_total_discounted_costs != "" &&
+        context$outcomes$comparator_total_discounted_qalys != "" &&
+        context$outcomes$comparator_total_discounted_costs != "") {
       pacheck::plot_ce(
         df = context$model$data_filtered() %>% as.data.frame(),
-        e_int = context$outcomes$intervention_total_effects,
-        c_int = context$outcomes$intervention_total_costs,
-        e_comp = context$outcomes$comparator_total_effects,
-        c_comp = context$outcomes$comparator_total_costs
+        e_int = context$outcomes$intervention_total_discounted_qalys,
+        c_int = context$outcomes$intervention_total_discounted_costs,
+        e_comp = context$outcomes$comparator_total_discounted_qalys,
+        c_comp = context$outcomes$comparator_total_discounted_costs
       )
     }
   })
@@ -550,10 +638,10 @@ outcomesServer <- function(input, output, session, context) {
   
   ### plotly/nb_plot ----
   output$nb_plot <- renderPlot({
-    if (context$outcomes$intervention_total_effects != "" &&
-        context$outcomes$comparator_total_effects != "" &&
-        context$outcomes$intervention_total_costs != "" &&
-        context$outcomes$comparator_total_costs != "") {
+    if (context$outcomes$intervention_total_discounted_qalys != "" &&
+        context$outcomes$intervention_total_discounted_costs != "" &&
+        context$outcomes$comparator_total_discounted_qalys != "" &&
+        context$outcomes$comparator_total_discounted_costs != "") {
       pacheck::plot_nb(
         df = nb_inputs(),
         NMB = nb$nmb(),
@@ -565,10 +653,10 @@ outcomesServer <- function(input, output, session, context) {
   
   ### plotly/ceac_plot ----
   output$ceac_plot <- renderPlotly({
-    if (context$outcomes$intervention_total_effects != "" &&
-        context$outcomes$comparator_total_effects != "" &&
-        context$outcomes$intervention_total_costs != "" &&
-        context$outcomes$comparator_total_costs != "") {
+    if (context$outcomes$intervention_total_discounted_qalys != "" &&
+        context$outcomes$intervention_total_discounted_costs != "" &&
+        context$outcomes$comparator_total_discounted_qalys != "" &&
+        context$outcomes$comparator_total_discounted_costs != "") {
       pacheck::plot_ceac(df = ceac_inputs(),
                          wtp = "WTP_threshold")
     }
