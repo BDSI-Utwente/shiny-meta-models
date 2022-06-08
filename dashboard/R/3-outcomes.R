@@ -179,6 +179,7 @@ outcomesUI <- tabItem(
     )
     )
     ),
+  ## NB plane ----
   box(
     width = 12,
     title = "Net benefits plane",
@@ -534,7 +535,7 @@ outcomesServer <- function(input, output, session, context) {
       input$`outcomes-nb-nmb`
     }) %>% debounce(500),
     comparators = reactive({
-      input$`outcomes-nb-comprators`
+      input$`outcomes-nb-comparators`
     }) %>% debounce(500),
     incremental = reactive({
       input$`outcomes-nb-incremental`
