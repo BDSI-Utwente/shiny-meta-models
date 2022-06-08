@@ -278,7 +278,7 @@ outcomesServer <- function(input, output, session, context) {
     comparator_total_discounted_costs = "",
     comparator_total_undiscounted_qalys = "",
     comparator_total_undiscounted_lys = "",
-    comparator_total_undiscounted_costs = "",
+    comparator_total_undiscounted_costs = ""
   )
   
   ## UI update observers ----
