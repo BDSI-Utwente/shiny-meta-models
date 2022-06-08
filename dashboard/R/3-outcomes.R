@@ -53,9 +53,8 @@ outcomesUI <- tabItem(
                       ### table/ice_summary ----
                       tableOutput("ice_summary")))
     ),
-    
     conditionalPanel(
-      "input['outcomes-intervention-total-costs'] != '' || input['outcomes-intervention-total-effects'] != '' || input['outcomes-comparator-total-costs'] != '' || input['outcomes-comparator-total-effects'] != ''",
+      "input['outcomes-intervention-total-costs'] == '' || input['outcomes-intervention-total-effects'] == '' || input['outcomes-comparator-total-costs'] == '' || input['outcomes-comparator-total-effects'] == ''",
       bs4Dash::bs4Callout(
         "You must load a data set and select total costs and effects variables for the intervention and comparator conditions before a cost-effectiveness plane can be created.",
         title = "Select outcome variables",
