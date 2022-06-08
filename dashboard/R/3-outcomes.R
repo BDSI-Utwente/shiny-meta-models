@@ -518,12 +518,16 @@ outcomesServer <- function(input, output, session, context) {
   
   ###datatable/ice_summary ----
   output$ice_summary <- renderTable({
-    if (context$outcomes$intervention_incremental_effects != "" &&
-        context$outcomes$intervention_incremental_costs != "") {
+    if (context$outcomes$intervention_total_effects != "" &&
+        context$outcomes$comparator_total_effects != "" &&
+        context$outcomes$intervention_total_costs != "" &&
+        context$outcomes$comparator_total_costs != "") {
       pacheck::summary_ice(
         df = context$model$data_filtered() %>% as.data.frame(),
-        context$outcomes$intervention_incremental_effects,
-        context$outcomes$intervention_incremental_costs
+        e_int = context$outcomes$intervention_total_effects,
+        c_int = context$outcomes$intervention_total_costs,
+        e_comp = context$outcomes$comparator_total_effects,
+        c_comp = context$outcomes$comparator_total_costs
       )
     }
   })
