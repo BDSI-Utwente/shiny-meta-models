@@ -500,6 +500,162 @@ dataServer <- function(input, output, session, context) {
         list(messages = tibble(ok = FALSE, message = "no variables were marked as RR, OR, HR"))
     }
     
+    if (context$outcomes$intervention_total_discounted_qalys != "") {
+      checks$t_qalys_discounted_int <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$intervention_total_discounted_qalys,
+        ~ .x > 0,
+        "positive",
+        "total discounted QALYs are {label_check} for the intervention"
+      )
+    } else {
+      checks$t_qalys_discounted_int <-
+        list(messages = tibble(ok = FALSE, message = "no discounted total QALYs selected for the intervention"))
+    }
+    
+    if (context$outcomes$intervention_total_undiscounted_qalys != "") {
+      checks$t_qalys_unidscounted_int <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$intervention_total_undiscounted_qalys,
+        ~ .x > 0,
+        "positive",
+        "total undiscounted QALYs are {label_check} for the intervention"
+      )
+    } else {
+      checks$t_qalys_unidscounted_int <-
+        list(messages = tibble(ok = FALSE, message = "no undiscounted total QALYs selected for the intervention"))
+    }
+    
+    if (context$outcomes$comparator_total_discounted_qalys != "") {
+      checks$t_qalys_discounted_comp <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$comparator_total_discounted_qalys,
+        ~ .x > 0,
+        "positive",
+        "total discounted QALYs are {label_check} for the comparator"
+      )
+    } else {
+      checks$t_qalys_discounted_comp <-
+        list(messages = tibble(ok = FALSE, message = "no discounted total QALYs selected for the comparator"))
+    }
+    
+    if (context$outcomes$comparator_total_undiscounted_qalys != "") {
+      checks$t_qalys_undiscounted_comp <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$comparator_total_undiscounted_qalys,
+        ~ .x > 0,
+        "positive",
+        "total undiscounted QALYs are {label_check} for the comparator"
+      )
+    } else {
+      checks$t_qalys_undiscounted_comp <-
+        list(messages = tibble(ok = FALSE, message = "no undiscounted total QALYs selected for the comparator"))
+    }
+    
+    if (context$outcomes$intervention_total_discounted_lys != "") {
+      checks$t_lys_discounted_int <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$intervention_total_discounted_lys,
+        ~ .x > 0,
+        "positive",
+        "total discounted LYs are {label_check} for the intervention"
+      )
+    } else {
+      checks$t_lys_discounted_int <-
+        list(messages = tibble(ok = FALSE, message = "no discounted total LYs selected for the intervention"))
+    }
+    
+    if (context$outcomes$intervention_total_undiscounted_lys != "") {
+      checks$t_lys_unidscounted_int <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$intervention_total_undiscounted_lys,
+        ~ .x > 0,
+        "positive",
+        "total undiscounted LYs are {label_check} for the intervention"
+      )
+    } else {
+      checks$t_lys_unidscounted_int <-
+        list(messages = tibble(ok = FALSE, message = "no undiscounted total LYs selected for the intervention"))
+    }
+    
+    if (context$outcomes$comparator_total_discounted_lys != "") {
+      checks$t_lys_discounted_comp <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$comparator_total_discounted_lys,
+        ~ .x > 0,
+        "positive",
+        "total discounted LYs are {label_check} for the comparator"
+      )
+    } else {
+      checks$t_lys_discounted_comp <-
+        list(messages = tibble(ok = FALSE, message = "no discounted total LYs selected for the comparator"))
+    }
+    
+    if (context$outcomes$comparator_total_undiscounted_lys != "") {
+      checks$t_lys_undiscounted_comp <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$comparator_total_undiscounted_lys,
+        ~ .x > 0,
+        "positive",
+        "total undiscounted LYs are {label_check} for the comparator"
+      )
+    } else {
+      checks$t_lys_undiscounted_comp <-
+        list(messages = tibble(ok = FALSE, message = "no undiscounted total LYs selected for the comparator"))
+    }
+    
+    if (context$outcomes$intervention_total_discounted_costs != "") {
+      checks$t_costs_discounted_int <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$intervention_total_discounted_costs,
+        ~ .x > 0,
+        "positive",
+        "total discounted costs are {label_check} for the intervention"
+      )
+    } else {
+      checks$t_costs_discounted_int <-
+        list(messages = tibble(ok = FALSE, message = "no discounted total costs selected for the intervention"))
+    }
+    
+    if (context$outcomes$intervention_total_undiscounted_costs != "") {
+      checks$t_costs_unidscounted_int <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$intervention_total_undiscounted_costs,
+        ~ .x > 0,
+        "positive",
+        "total undiscounted costs are {label_check} for the intervention"
+      )
+    } else {
+      checks$t_costs_unidscounted_int <-
+        list(messages = tibble(ok = FALSE, message = "no undiscounted total costs selected for the intervention"))
+    }
+    
+    if (context$outcomes$comparator_total_discounted_costs != "") {
+      checks$t_costs_discounted_comp <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$comparator_total_discounted_costs,
+        ~ .x > 0,
+        "positive",
+        "total discounted costs are {label_check} for the comparator"
+      )
+    } else {
+      checks$t_costs_discounted_comp <-
+        list(messages = tibble(ok = FALSE, message = "no discounted total costs selected for the comparator"))
+    }
+    
+    if (context$outcomes$comparator_total_undiscounted_costs != "") {
+      checks$t_costs_undiscounted_comp <- pacheck:::do_check(
+        context$model$data_filtered(),
+        context$outcomes$comparator_total_undiscounted_costs,
+        ~ .x > 0,
+        "positive",
+        "total undiscounted costs are {label_check} for the comparator"
+      )
+    } else {
+      checks$t_costs_undiscounted_comp <-
+        list(messages = tibble(ok = FALSE, message = "no undiscounted total costs selected for the comparator"))
+    }
+    
     if ((context$outcomes$intervention_total_discounted_qalys != "" &
          context$outcomes$intervention_total_undiscounted_qalys != "")) {
       checks$disc_qalys_int <- pacheck:::do_check(
@@ -511,7 +667,7 @@ dataServer <- function(input, output, session, context) {
       )
     } else {
       checks$disc_qalys_int <-
-        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total QALYs for the intervention"))
+        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total QALYs selected for the intervention"))
     }
     
     if ((context$outcomes$comparator_total_discounted_qalys != "" &
@@ -525,7 +681,7 @@ dataServer <- function(input, output, session, context) {
       )
     } else {
       checks$disc_qalys_comp <-
-        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total QALYs for the comparator"))
+        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total QALYs selected for the comparator"))
     }
     
     if ((context$outcomes$intervention_total_discounted_lys != "" &
@@ -539,7 +695,7 @@ dataServer <- function(input, output, session, context) {
       )
     } else {
       checks$disc_lys_int <-
-        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total LYs for the intervention"))
+        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total LYs selected for the intervention"))
     }
     
     if ((context$outcomes$comparator_total_discounted_lys != "" &
@@ -553,7 +709,7 @@ dataServer <- function(input, output, session, context) {
       )
     } else {
       checks$disc_lys_comp <-
-        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total LYs for the comparator"))
+        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total LYs selected for the comparator"))
     }
     
     if ((context$outcomes$intervention_total_discounted_costs != "" &
@@ -567,7 +723,7 @@ dataServer <- function(input, output, session, context) {
       )
     } else {
       checks$disc_costs_int <-
-        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total costs for the intervention"))
+        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total costs selected for the intervention"))
     }
     
     if ((context$outcomes$comparator_total_discounted_costs != "" &
@@ -581,7 +737,7 @@ dataServer <- function(input, output, session, context) {
       )
     } else {
       checks$disc_costs_comp <-
-        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total costs for the comparator"))
+        list(messages = tibble(ok = FALSE, message = "no discounted and undiscounted total costs selected for the comparator"))
     }
     
     msgs <- checks %>%
