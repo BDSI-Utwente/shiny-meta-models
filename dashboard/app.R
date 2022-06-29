@@ -39,7 +39,7 @@ ui <- dashboardPage(
         icon = icon("chart-bar")
       ),
       menuItem(
-        "Relations",
+        "Metamodelling",
         tabName = "relations",
         icon = icon("chart-line")
       ),
