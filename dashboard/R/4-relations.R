@@ -44,6 +44,14 @@ relationsUI <- tabItem(
       )
     )
   ),
+  ## Validation linear metamodel ----
+  box(
+    title = "Validation metamodel",
+    collapsed = TRUE
+    # first lm object veranderen
+    # dan conditionele dat er wel een model gefit is, anders warning message
+  ),
+  
   ## DSA ----
   box(
     title = "Deterministic Sensitivity Analysis",
@@ -51,7 +59,7 @@ relationsUI <- tabItem(
     collapsed = TRUE,
     
     conditionalPanel(
-      "input['relations-lm-outcome-variable'] != '' && input['relations-lm-predictor-variables'].length >= 1",
+      "input['relations-lm-outcome-variable'] != '' && input['relations-lm-predictor-variables'].length >= 2",
       
       fluidRow(column(6,
                       ### plotly/relations-dsa-plot ----
