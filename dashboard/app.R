@@ -44,7 +44,7 @@ ui <- dashboardPage(
         icon = icon("chart-line")
       ),
       menuItem(
-        "Meta-model predictions",
+        "Metamodel predictions",
         tabName = "predictions",
         icon = icon("calendar")
       )
