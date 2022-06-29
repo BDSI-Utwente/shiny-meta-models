@@ -153,7 +153,7 @@ relationsServer <- function(input, output, session, context) {
       x_vars <- context$relations$predictor_variables
       
       if (is.null(x_var) || x_var == "") {
-        x_var <- x_vars %>% first()
+        x_var <- x_vars %>% dplyr::first()
       }
       
       data <- context$model$data_filtered() %>%
