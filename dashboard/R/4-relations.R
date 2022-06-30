@@ -160,7 +160,7 @@ relationsServer <- function(input, output, session, context) {
   ### print/relations-lm-summary ----
   output$`relations-lm-summary` <- renderPrint({
     if (!is.null(context$relations$lm())) {
-      context$relations$lm() %>%
+      context$relations$lm()$fit %>%
         summary()
     }
   })
@@ -197,7 +197,7 @@ relationsServer <- function(input, output, session, context) {
       }
       context$relations$margins(margins)
       
-      predictions <- predict(context$relations$lm(),
+      predictions <- predict(context$relations$lm()$fit,
                              pred_data,
                              interval = "conf") %>%
         as_tibble() %>%
