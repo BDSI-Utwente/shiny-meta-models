@@ -47,6 +47,7 @@ relationsUI <- tabItem(
   ## Validation linear metamodel ----
   box(
     title = "Validation metamodel",
+    width = 12,
     collapsed = TRUE
     # first lm object veranderen
     # dan conditionele dat er wel een model gefit is, anders warning message
@@ -124,21 +125,33 @@ relationsServer <- function(input, output, session, context) {
     context$relations$outcome_variable <- input$`relations-lm-outcome-variable`
   })
   
+  updateOutcomeVariableNB <- observe({
+    context$relations$outcome_variable <- ""
+  }) %>% bindEvent(context$model$data_filtered())
+  
   updatePredictorVariables <- observe({
     context$relations$predictor_variables <- input$`relations-lm-predictor-variables`
   })
   
   ## update model data ----
   context$relations$lm <- reactive({
-    if (context$relations$outcome_variable != "" &&
+    if (context$relations$outcome_variable %in% names(context$model$data_filtered()) &&
+        context$relations$outcome_variable != "" &&
         length(context$relations$predictor_variables) >= 1) {
-      formula <-
-        as.formula(paste(
-          context$relations$outcome_variable,
-          "~",
-          paste(context$relations$predictor_variables, collapse = "+")
-        ))
-      lm(formula, context$model$data_filtered(), na.action = "na.omit")
+      
+      l_out <- pacheck::fit_lm_metamodel(
+        df = context$model$data_filtered(),
+        y = context$relations$outcome_variable,
+        x = context$relations$predictor_variables,
+        partition = 0.75)
+      return(l_out)
+      # formula <-
+      #   as.formula(paste(
+      #     context$relations$outcome_variable,
+      #     "~",
+      #     paste(context$relations$predictor_variables, collapse = "+")
+      #   ))
+      # lm(formula, context$model$data_filtered(), na.action = "na.omit")
     }
   }) %>% debounce(500)
   
@@ -148,14 +161,14 @@ relationsServer <- function(input, output, session, context) {
   ### print/relations-lm-summary ----
   output$`relations-lm-summary` <- renderPrint({
     if (!is.null(context$relations$lm())) {
-      context$relations$lm() %>%
+      context$relations$lm$fit() %>%
         summary()
     }
   })
   
   ### plotly/relations-lm-plot ----
   output$`relations-lm-plot` <- renderPlotly({
-    if (!is.null(context$relations$lm())) {
+    if (!is.null(context$relations$lm)) {
       y_var <- context$relations$outcome_variable
       x_var <- input$`relations-lm-plot-predictor-variable`
       x_vars <- context$relations$predictor_variables
@@ -185,7 +198,7 @@ relationsServer <- function(input, output, session, context) {
       }
       context$relations$margins(margins)
       
-      predictions <- predict(context$relations$lm(),
+      predictions <- predict(context$relations$lm()$fit,
                              pred_data,
                              interval = "conf") %>%
         as_tibble() %>%
@@ -220,7 +233,7 @@ relationsServer <- function(input, output, session, context) {
   }) %>% bindEvent(context$relations$margins())
   
   context$relations$dsa <- reactive({
-    pacheck::dsa_lm_metamodel(context$model$data_filtered(), context$relations$lm())
+    pacheck::dsa_lm_metamodel(context$model$data_filtered(), context$relations$lm$fit())
   }) %>% bindEvent(context$relations$lm())
   
   ### dataTable/relations-dsa-table ----
