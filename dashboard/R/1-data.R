@@ -237,11 +237,14 @@ dataUI <- tabItem(
                  min = 0,
                  max = Inf,
                  step = 1000),
-    checkboxInput("calculate_incrementals",
-                  "Calculate incremental costs and effects?",
-                  value = TRUE),
-    actionButton("calculate_inc_nb",
-                 label = "Click to calculate net benefits and increments")
+    radioButtons(
+      "outcome-to-calculate",
+      label = "Which outcome should be calculated?",
+      choices = list("None" = 1, 
+                     "Incremental QALYs and costs" = 2, 
+                     "Net benefits" = 3,
+                     "Incremental QALYs and costs and net benefits" = 4),
+      selected = 1  )
     ),
     
   ## ui/summary-quick-checks ----
@@ -279,52 +282,111 @@ dataServer <- function(input, output, session, context) {
   context$model$file <- reactiveValues(status = NULL,
                                        initialized = FALSE)
   
+  ### debounce rapidly changing inputs ----
+  data_nb <- list(
+    # only apply changes after 500ms without any change
+    calculation = reactive({
+      input$`outcome-to-calculate`
+    }) %>% debounce(500),
+    wtp = reactive({
+      input$wtp_data
+    }) %>% debounce(500)
+  )
+  
   context$model$data_filtered <- reactive({
     if (scenarioValid()) {
-      return(context$model$data %>% filter(.data[[context$model$scenario_variable]] == input$scenario))
+      df_nb <- context$model$data %>% filter(.data[[context$model$scenario_variable]] == input$scenario)
+      if(data_nb$calculation() == 2 &&
+         context$outcomes$intervention_total_discounted_qalys != "" &&
+         context$outcomes$intervention_total_discounted_costs != "" &&
+         context$outcomes$comparator_total_discounted_qalys != "" &&
+         context$outcomes$comparator_total_discounted_costs != ""
+      ){
+        df_nb$incremental_qaly <- as.numeric(as.character(unlist(df_nb[, context$outcomes$intervention_total_discounted_qalys]))) - as.numeric(as.character(unlist(df_nb[, context$outcomes$comparator_total_discounted_qalys])))
+        df_nb$incremental_cost <- as.numeric(as.character(unlist(df_nb[, context$outcomes$intervention_total_discounted_costs]))) - as.numeric(as.character(unlist(df_nb[, context$outcomes$comparator_total_discounted_costs])))
+      }
+      if (data_nb$calculation() == 3 &&
+          context$outcomes$intervention_total_discounted_qalys != "" &&
+          context$outcomes$intervention_total_discounted_costs != "" &&
+          context$outcomes$comparator_total_discounted_qalys != "" &&
+          context$outcomes$comparator_total_discounted_costs != "" 
+                 ){
+          df_nb <- pacheck::calculate_nb(
+            df = df_nb %>% as.data.frame(),
+            e_int = context$outcomes$intervention_total_discounted_qalys,
+            c_int = context$outcomes$intervention_total_discounted_costs,
+            e_comp = context$outcomes$comparator_total_discounted_qalys,
+            c_comp = context$outcomes$comparator_total_discounted_costs,
+            wtp = data_nb$wtp()
+          )    
+        }
+      if (data_nb$calculation() == 4 &&
+                   context$outcomes$intervention_total_discounted_qalys != "" &&
+             context$outcomes$intervention_total_discounted_costs != "" &&
+             context$outcomes$comparator_total_discounted_qalys != "" &&
+             context$outcomes$comparator_total_discounted_costs != ""
+          ){
+            df_nb <- pacheck::calculate_nb(
+              df = df_nb %>% as.data.frame(),
+              e_int = context$outcomes$intervention_total_discounted_qalys,
+              c_int = context$outcomes$intervention_total_discounted_costs,
+              e_comp = context$outcomes$comparator_total_discounted_qalys,
+              c_comp = context$outcomes$comparator_total_discounted_costs,
+              wtp = data_nb$wtp()
+            )
+            df_nb$incremental_qaly <- as.numeric(as.character(unlist(df_nb[, context$outcomes$intervention_total_discounted_qalys]))) - as.numeric(as.character(unlist(df_nb[, context$outcomes$comparator_total_discounted_qalys])))
+            df_nb$incremental_cost <- as.numeric(as.character(unlist(df_nb[, context$outcomes$intervention_total_discounted_costs]))) - as.numeric(as.character(unlist(df_nb[, context$outcomes$comparator_total_discounted_costs])))
+          }
+      return(df_nb)
     } else {
-      return(context$model$data)
+      df_nb <- context$model$data
+      if(data_nb$calculation() == 2 &&
+         context$outcomes$intervention_total_discounted_qalys != "" &&
+         context$outcomes$intervention_total_discounted_costs != "" &&
+         context$outcomes$comparator_total_discounted_qalys != "" &&
+         context$outcomes$comparator_total_discounted_costs != "" 
+      ){
+        df_nb$incremental_qaly <- as.numeric(as.character(unlist(df_nb[, context$outcomes$intervention_total_discounted_qalys]))) - as.numeric(as.character(unlist(df_nb[, context$outcomes$comparator_total_discounted_qalys])))
+        df_nb$incremental_cost <- as.numeric(as.character(unlist(df_nb[, context$outcomes$intervention_total_discounted_costs]))) - as.numeric(as.character(unlist(df_nb[, context$outcomes$comparator_total_discounted_costs])))
+      } 
+      if (data_nb$calculation() == 3 &&
+                 context$outcomes$intervention_total_discounted_qalys != "" &&
+           context$outcomes$intervention_total_discounted_costs != "" &&
+           context$outcomes$comparator_total_discounted_qalys != "" &&
+           context$outcomes$comparator_total_discounted_costs != "" 
+        ){
+          df_nb <- pacheck::calculate_nb(
+            df = df_nb %>% as.data.frame(),
+            e_int = context$outcomes$intervention_total_discounted_qalys,
+            c_int = context$outcomes$intervention_total_discounted_costs,
+            e_comp = context$outcomes$comparator_total_discounted_qalys,
+            c_comp = context$outcomes$comparator_total_discounted_costs,
+            wtp = data_nb$wtp()
+          )      
+        } 
+      if(data_nb$calculation() == 4 && 
+         context$outcomes$intervention_total_discounted_qalys != "" &&
+             context$outcomes$intervention_total_discounted_costs != "" &&
+             context$outcomes$comparator_total_discounted_qalys != "" &&
+             context$outcomes$comparator_total_discounted_costs != ""
+          ){
+            df_nb <- pacheck::calculate_nb(
+              df = df_nb %>% as.data.frame(),
+              e_int = context$outcomes$intervention_total_discounted_qalys,
+              c_int = context$outcomes$intervention_total_discounted_costs,
+              e_comp = context$outcomes$comparator_total_discounted_qalys,
+              c_comp = context$outcomes$comparator_total_discounted_costs,
+              wtp = data_nb$wtp()
+            )
+            df_nb$incremental_qaly <- as.numeric(as.character(unlist(df_nb[, context$outcomes$intervention_total_discounted_qalys]))) - as.numeric(as.character(unlist(df_nb[, context$outcomes$comparator_total_discounted_qalys])))
+            df_nb$incremental_cost <- as.numeric(as.character(unlist(df_nb[, context$outcomes$intervention_total_discounted_costs]))) - as.numeric(as.character(unlist(df_nb[, context$outcomes$comparator_total_discounted_costs])))
+          }
+      return(df_nb)
     }
-  }) %>% bindEvent(scenarioValid(), context$model$data)
-  
-  
-  context$model$data_metamodel <- eventReactive(input$calculate_inc_nb, {
-    if(input$calculate_incrementals == TRUE) {
-      df_analysis <- context$model$data_filtered() %>% as.data.frame()
-      df <- data.frame(cbind(
-        df_analysis,
-        pacheck::calculate_nb(
-          df = df_analysis,
-          e_int = context$outcomes$intervention_total_discounted_qalys,
-          c_int = context$outcomes$intervention_total_discounted_costs,
-          e_comp = context$outcomes$comparator_total_discounted_qalys,
-          c_comp = context$outcomes$comparator_total_discounted_costs,
-          wtp = input$wtp_data
-        ),
-        incremental_lys = df_analysis[, context$outcomes$intervention_total_discounted_lys] - df_analysis[, context$outcomes$comparator_total_discounted_lys],
-        incremental_qalys = df_analysis[, context$outcomes$intervention_total_discounted_qalys] - df_analysis[, context$outcomes$comparator_total_discounted_qalys],
-        incremental_costs = df_analysis[, context$outcomes$intervention_total_discounted_costs] - df_analysis[, context$outcomes$comparator_total_discounted_costs]
-      )
-      )
-      return(df)
-    } else {
-      df_analysis <- context$model$data_filtered() %>% as.data.frame()
-      df <- data.frame(cbind(
-        df_analysis,
-        pacheck::calculate_nb(
-          df = df_analysis,
-          e_int = context$outcomes$intervention_total_discounted_qalys,
-          c_int = context$outcomes$intervention_total_discounted_costs,
-          e_comp = context$outcomes$comparator_total_discounted_qalys,
-          c_comp = context$outcomes$comparator_total_discounted_costs,
-          wtp = input$wtp_data
-          )
-        )
-      )
-      return(df)
-    }
-    
-  })
+       #return(context$model$data)
+  }) %>% bindEvent(scenarioValid(), context$model$data,
+                   data_nb$calculation(), data_nb$wtp()
+                   )
   
   scenarioVariableValid <- reactive({
     context$model$scenario_variable != "" &&
@@ -419,6 +481,10 @@ dataServer <- function(input, output, session, context) {
     context$model$variables <- names(context$model$data)
   }) %>% bindEvent(context$model$data)
   
+  updateModelVariablesIncrementsNB <- observe({
+    context$model$variables <- names(context$model$data_filtered())
+  }) %>% bindEvent(context$model$data_filtered())
+
   updateCostVariables <- observe({
     context$model$cost_variables <- input$`cost-variables`
   }) %>% bindEvent(input$`cost-variables`)
