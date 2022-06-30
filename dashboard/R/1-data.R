@@ -227,6 +227,23 @@ dataUI <- tabItem(
     )
   ),
   
+  ## calculate net benefits ----
+  box(
+    title = "Calculate incrementals and net benefits",
+    width = 12,
+    numericInput("wtp_data", 
+                 "Choose your willingness to pay",
+                 value = 50000,
+                 min = 0,
+                 max = Inf,
+                 step = 1000),
+    checkboxInput("calculate_incrementals",
+                  "Calculate incremental costs and effects?",
+                  value = TRUE),
+    actionButton("calculate_inc_nb",
+                 label = "Click to calculate net benefits and increments")
+    ),
+    
   ## ui/summary-quick-checks ----
   box(
     width = 12,
@@ -269,6 +286,45 @@ dataServer <- function(input, output, session, context) {
       return(context$model$data)
     }
   }) %>% bindEvent(scenarioValid(), context$model$data)
+  
+  
+  context$model$data_metamodel <- eventReactive(input$calculate_inc_nb, {
+    if(input$calculate_incrementals == TRUE) {
+      df_analysis <- context$model$data_filtered() %>% as.data.frame()
+      df <- data.frame(cbind(
+        df_analysis,
+        pacheck::calculate_nb(
+          df = df_analysis,
+          e_int = context$outcomes$intervention_total_discounted_qalys,
+          c_int = context$outcomes$intervention_total_discounted_costs,
+          e_comp = context$outcomes$comparator_total_discounted_qalys,
+          c_comp = context$outcomes$comparator_total_discounted_costs,
+          wtp = input$wtp_data
+        ),
+        incremental_lys = df_analysis[, context$outcomes$intervention_total_discounted_lys] - df_analysis[, context$outcomes$comparator_total_discounted_lys],
+        incremental_qalys = df_analysis[, context$outcomes$intervention_total_discounted_qalys] - df_analysis[, context$outcomes$comparator_total_discounted_qalys],
+        incremental_costs = df_analysis[, context$outcomes$intervention_total_discounted_costs] - df_analysis[, context$outcomes$comparator_total_discounted_costs]
+      )
+      )
+      return(df)
+    } else {
+      df_analysis <- context$model$data_filtered() %>% as.data.frame()
+      df <- data.frame(cbind(
+        df_analysis,
+        pacheck::calculate_nb(
+          df = df_analysis,
+          e_int = context$outcomes$intervention_total_discounted_qalys,
+          c_int = context$outcomes$intervention_total_discounted_costs,
+          e_comp = context$outcomes$comparator_total_discounted_qalys,
+          c_comp = context$outcomes$comparator_total_discounted_costs,
+          wtp = input$wtp_data
+          )
+        )
+      )
+      return(df)
+    }
+    
+  })
   
   scenarioVariableValid <- reactive({
     context$model$scenario_variable != "" &&
