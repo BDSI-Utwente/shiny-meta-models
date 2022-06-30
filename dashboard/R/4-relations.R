@@ -142,8 +142,7 @@ relationsServer <- function(input, output, session, context) {
       l_out <- pacheck::fit_lm_metamodel(
         df = context$model$data_filtered(),
         y = context$relations$outcome_variable,
-        x = context$relations$predictor_variables,
-        partition = 0.75)
+        x = context$relations$predictor_variables)
       return(l_out)
       # formula <-
       #   as.formula(paste(
@@ -161,14 +160,14 @@ relationsServer <- function(input, output, session, context) {
   ### print/relations-lm-summary ----
   output$`relations-lm-summary` <- renderPrint({
     if (!is.null(context$relations$lm())) {
-      context$relations$lm$fit() %>%
+      context$relations$lm() %>%
         summary()
     }
   })
   
   ### plotly/relations-lm-plot ----
   output$`relations-lm-plot` <- renderPlotly({
-    if (!is.null(context$relations$lm)) {
+    if (!is.null(context$relations$lm())) {
       y_var <- context$relations$outcome_variable
       x_var <- input$`relations-lm-plot-predictor-variable`
       x_vars <- context$relations$predictor_variables
@@ -198,7 +197,7 @@ relationsServer <- function(input, output, session, context) {
       }
       context$relations$margins(margins)
       
-      predictions <- predict(context$relations$lm()$fit,
+      predictions <- predict(context$relations$lm(),
                              pred_data,
                              interval = "conf") %>%
         as_tibble() %>%
