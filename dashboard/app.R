@@ -47,6 +47,11 @@ ui <- dashboardPage(
         "Metamodel predictions",
         tabName = "predictions",
         icon = icon("calendar")
+      ),
+      menuItem(
+        "Survival analysis",
+        tabName = "survival",
+        icon = icon("chart-line")
       )
     )
   ),
@@ -57,7 +62,8 @@ ui <- dashboardPage(
       summaryUI,
       outcomesUI,
       relationsUI,
-      predictionsUI
+      predictionsUI,
+      survivalUI
     )
   )
 )
@@ -69,6 +75,7 @@ server <- function(input, output, session) {
   outcomesServer(input, output, session, context)
   relationsServer(input, output, session, context)
   predictionsServer(input, output, session, context)
+  survivalServer(input, output, session, context)
   
   ## test data binding ----
   observe({
