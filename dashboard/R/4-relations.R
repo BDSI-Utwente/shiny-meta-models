@@ -9,14 +9,44 @@ relationsUI <- tabItem(
     selectizeInput(
       "relations-lm-outcome-variable",
       "Outcome",
-      choices = c("No data loaded..." = "")
+      choices = c("No data loaded..." = ""),
+      width = 6
     ),
     ### selectize/relations-lm-predictor-variables ----
     selectizeInput(
       "relations-lm-predictor-variables",
       "Predictors",
       choices = c("No data loaded..." = ""),
-      multiple = TRUE
+      multiple = TRUE,
+      width = 6
+    ),
+    selectizeInput(
+      "relations-lm-predictor-variables-poly-2",
+      "Predictors to transform in second-degree polynomials",
+      choices = c("No data loaded..." = ""),
+      multiple = TRUE,
+      width = 6
+    ),
+    selectizeInput(
+      "relations-lm-predictor-variables-poly-3",
+      "Predictors to transform in third-degree polynomials",
+      choices = c("No data loaded..." = ""),
+      multiple = TRUE,
+      width = 6
+    ),
+    selectizeInput(
+      "relations-lm-predictor-variables-exponential",
+      "Predictors to exponentiate",
+      choices = c("No data loaded..." = ""),
+      multiple = TRUE,
+      width = 6
+    ),
+    selectizeInput(
+      "relations-lm-predictor-variables-log",
+      "Predictors to log-transform",
+      choices = c("No data loaded..." = ""),
+      multiple = TRUE,
+      width = 6
     ),
     conditionalPanel(
       "input['relations-lm-outcome-variable'] != '' && input['relations-lm-predictor-variables'].length >= 1",
@@ -83,7 +113,11 @@ relationsServer <- function(input, output, session, context) {
     reactiveValues(
       lm = NULL,
       outcome_variable = "",
-      predictor_variables = c()
+      predictor_variables = c(),
+      predictor_variables_poly_2 = c(),
+      predictor_variables_poly_3 = c(),
+      predictor_variables_exponential = c(),
+      predictor_variables_log = c()
     )
   
   model_variables <- reactive({
@@ -94,7 +128,11 @@ relationsServer <- function(input, output, session, context) {
   updateModelChoices <- observe({
     inputs <-
       c("relations-lm-outcome-variable",
-        "relations-lm-predictor-variables")
+        "relations-lm-predictor-variables",
+        "relations-lm-predictor-variables-poly-2",
+        "relations-lm-predictor-variables-poly-3",
+        "relations-lm-predictor-variables-exponential",
+        "relations-lm-predictor-variables-log")
     selected <- list(
       `relations-lm-outcome-variable` = context$relations$outcome_variable,
       `relations-lm-predictor-variables` = context$relations$predictor_variables
@@ -120,6 +158,43 @@ relationsServer <- function(input, output, session, context) {
     )
   }) %>% bindEvent(context$relations$predictor_variables)
   
+  
+  updatePredictorChoicesPoly2 <- observe({
+    updateSelectizeInput(
+      session,
+      "relations-lm-plot-predictor-variable-poly-2",
+      choices = context$relations$predictor_variables_poly_2,
+      selected = input$`relations-lm-plot-predictor-variable-poly-2`
+    )
+  }) %>% bindEvent(context$relations$predictor_variables_poly_2)
+  
+  updatePredictorChoicesPoly3 <- observe({
+    updateSelectizeInput(
+      session,
+      "relations-lm-plot-predictor-variable-poly-3",
+      choices = context$relations$predictor_variables_poly_3,
+      selected = input$`relations-lm-plot-predictor-variable-poly-3`
+    )
+  }) %>% bindEvent(context$relations$predictor_variables_poly_3)
+  
+  updatePredictorChoicesExponential <- observe({
+    updateSelectizeInput(
+      session,
+      "relations-lm-plot-predictor-variable-exponential",
+      choices = context$relations$predictor_variables_exponential,
+      selected = input$`relations-lm-plot-predictor-variable-exponential`
+    )
+  }) %>% bindEvent(context$relations$predictor_variables_exponential)
+  
+  updatePredictorChoicesLog <- observe({
+    updateSelectizeInput(
+      session,
+      "relations-lm-plot-predictor-variable-log",
+      choices = context$relations$predictor_variables_log,
+      selected = input$`relations-lm-plot-predictor-variable-log`
+    )
+  }) %>% bindEvent(context$relations$predictor_variables_log)
+  
   ## update context ----
   updateOutcomeVariable <- observe({
     context$relations$outcome_variable <- input$`relations-lm-outcome-variable`
@@ -127,11 +202,36 @@ relationsServer <- function(input, output, session, context) {
   
   updateOutcomeVariableNB <- observe({
     context$relations$outcome_variable <- ""
-  }) %>% bindEvent(context$model$data_filtered())
+  }) %>% bindEvent(context$model$data_filtered()) # to prevent crash when incrementals and NB's are (not) calculated
   
   updatePredictorVariables <- observe({
     context$relations$predictor_variables <- input$`relations-lm-predictor-variables`
   })
+  
+  updatePredictorVariablesNB <- observe({
+    context$relations$predictor_variables <- ""
+  }) %>% bindEvent(context$model$data_filtered())
+  
+  updatePredictorVariablesPoly2 <- observe({
+    context$relations$predictor_variables_poly_2 <- input$`relations-lm-predictor-variables-poly-2`
+  })
+  
+  updatePredictorVariablesPoly3 <- observe({
+    context$relations$predictor_variables_poly_3 <- input$`relations-lm-predictor-variables-poly-3`
+  })
+  
+  updatePredictorVariablesExponential <- observe({
+    context$relations$predictor_variables_exponential <- input$`relations-lm-predictor-variables-exponential`
+  })
+  
+  updatePredictorVariablesLog <- observe({
+    context$relations$predictor_variables_log <- input$`relations-lm-predictor-variables-log`
+  })
+  
+  l_lm_input <- list(
+    partition = reactive({}),
+    validation = reactive({})
+  )
   
   ## update model data ----
   context$relations$lm <- reactive({
@@ -142,7 +242,11 @@ relationsServer <- function(input, output, session, context) {
       l_out <- pacheck::fit_lm_metamodel(
         df = context$model$data_filtered(),
         y = context$relations$outcome_variable,
-        x = context$relations$predictor_variables)
+        x = context$relations$predictor_variables,
+        x_poly_2 = context$relations$predictor_variables_poly_2,
+        x_poly_3 = context$relations$predictor_variables_poly_3,
+        x_exp = context$relations$predictor_variables_exponential,
+        x_log = context$relations$predictor_variables_log)
       return(l_out)
       # formula <-
       #   as.formula(paste(
