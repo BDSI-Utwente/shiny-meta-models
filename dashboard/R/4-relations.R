@@ -429,7 +429,7 @@ relationsServer <- function(input, output, session, context) {
   }) %>% bindEvent(context$relations$margins())
   
   context$relations$dsa <- reactive({
-    pacheck::dsa_lm_metamodel(context$model$data_filtered(), context$relations$lm$fit())
+    pacheck::dsa_lm_metamodel(context$model$data_filtered(), context$relations$lm()$fit)
   }) %>% bindEvent(context$relations$lm())
   
   ### dataTable/relations-dsa-table ----
@@ -459,21 +459,15 @@ relationsServer <- function(input, output, session, context) {
     if(l_lm_input$validation() == TRUE &&
        l_lm_input$partition() > 0 &&
        l_lm_input$partition() < 1){
-    context$relations$lm$stats_validation()
+    context$relations$lm()$stats_validation
     }
-    ) %>% bindEvent(context$relation$lm(),
-                   l_lm_input$partition(),
-                   l_lm_input$validation()
-                   )
+    ) %>% bindEvent(context$relation$lm())
 
   output$`relations-metamodel-validation-plot` <- renderPlot(
     if(l_lm_input$validation() == TRUE &&
        l_lm_input$partition() > 0 &&
        l_lm_input$partition() < 1){
-    context$relations$lm$calibration_plot()
+    context$relations$lm()$calibration_plot
     }
-    ) %>% bindEvent(context$relation$lm(),
-                   l_lm_input$partition(),
-                   l_lm_input$validation()
-                   )
+    ) %>% bindEvent(context$relation$lm())
 }
