@@ -6,48 +6,91 @@ relationsUI <- tabItem(
     title = "Linear fit",
     width = 12,
     ### selectize/relations-lm-outcome-variable ----
-    selectizeInput(
-      "relations-lm-outcome-variable",
-      "Outcome",
-      choices = c("No data loaded..." = ""),
-      width = 6
-    ),
-    ### selectize/relations-lm-predictor-variables ----
-    selectizeInput(
-      "relations-lm-predictor-variables",
-      "Predictors",
-      choices = c("No data loaded..." = ""),
-      multiple = TRUE,
-      width = 6
-    ),
-    selectizeInput(
-      "relations-lm-predictor-variables-poly-2",
-      "Predictors to transform in second-degree polynomials",
-      choices = c("No data loaded..." = ""),
-      multiple = TRUE,
-      width = 6
-    ),
-    selectizeInput(
-      "relations-lm-predictor-variables-poly-3",
-      "Predictors to transform in third-degree polynomials",
-      choices = c("No data loaded..." = ""),
-      multiple = TRUE,
-      width = 6
-    ),
-    selectizeInput(
-      "relations-lm-predictor-variables-exponential",
-      "Predictors to exponentiate",
-      choices = c("No data loaded..." = ""),
-      multiple = TRUE,
-      width = 6
-    ),
-    selectizeInput(
-      "relations-lm-predictor-variables-log",
-      "Predictors to log-transform",
-      choices = c("No data loaded..." = ""),
-      multiple = TRUE,
-      width = 6
-    ),
+    fluidRow(
+      column(
+        width = 4,
+        selectizeInput(
+          "relations-lm-outcome-variable",
+          "Outcome",
+          choices = c("No data loaded..." = "")
+          )
+        ),
+      ### selectize/relations-lm-predictor-variables ----
+      column(
+        width = 4,
+        selectizeInput(
+          "relations-lm-predictor-variables",
+          "Predictors",
+          choices = c("No data loaded..." = ""),
+          multiple = TRUE
+          )
+        ),
+      ### selectize/relations-lm-predictor-variables-poly-2 ----
+      column(
+        width = 4,
+        selectizeInput(
+          "relations-lm-predictor-variables-poly-2",
+          "Predictors to transform in second-degree polynomials",
+          choices = c("No data loaded..." = ""),
+          multiple = TRUE
+          )
+        )
+      ),
+    fluidRow(
+      ### selectize/relations-lm-predictor-variables-poly-3 ----
+      column(
+        width = 4,
+        selectizeInput(
+          "relations-lm-predictor-variables-poly-3",
+          "Predictors to transform in third-degree polynomials",
+          choices = c("No data loaded..." = ""),
+          multiple = TRUE
+          )
+        ),
+      ### selectize/relations-lm-predictor-variables-exponential ----
+      column(
+        width = 4,
+        selectizeInput(
+          "relations-lm-predictor-variables-exponential",
+          "Predictors to exponentiate",
+          choices = c("No data loaded..." = ""),
+          multiple = TRUE
+          )
+        ),
+      ### selectize/relations-lm-predictor-variables-log ----
+      column(
+        width = 4,
+        selectizeInput(
+          "relations-lm-predictor-variables-log",
+          "Predictors to log-transform",
+          choices = c("No data loaded..." = ""),
+          multiple = TRUE
+          )
+        )
+      ),
+    fluidRow(
+      ### checkboxInput/relation-lm-validation ----
+      column(
+        width = 4,
+        checkboxInput(
+          "relation-lm-validation",
+          "Should validation of the metamodel be performed?",
+          value = FALSE
+          )
+        ),
+      ### numericInput/relation-lm-validation ----
+      column(
+        width = 4,
+        numericInput(
+          "relation-lm-partition",
+          "Proportion of data to use to train the linear model (remainder will be used for validation)",
+          min = 0,
+          max = 1,
+          step = 0.01,
+          value = 1
+          )
+        )
+      ),
     conditionalPanel(
       "input['relations-lm-outcome-variable'] != '' && input['relations-lm-predictor-variables'].length >= 1",
       fluidRow(
@@ -78,17 +121,24 @@ relationsUI <- tabItem(
   box(
     title = "Validation metamodel",
     width = 12,
-    collapsed = TRUE
-    # first lm object veranderen
-    # dan conditionele dat er wel een model gefit is, anders warning message
-  ),
+    collapsed = TRUE,
+        fluidRow(
+        column(
+          6,
+          dataTableOutput("relations-metamodel-validation-table")
+          ),
+        column(
+          6,
+          plotOutput("relations-metamodel-validation-plot")
+          )
+        )
+    ), # dan conditionele dat er wel een model gefit is, anders warning message
   
   ## DSA ----
   box(
     title = "Deterministic Sensitivity Analysis",
     width = 12,
     collapsed = TRUE,
-    
     conditionalPanel(
       "input['relations-lm-outcome-variable'] != '' && input['relations-lm-predictor-variables'].length >= 2",
       
@@ -117,11 +167,17 @@ relationsServer <- function(input, output, session, context) {
       predictor_variables_poly_2 = c(),
       predictor_variables_poly_3 = c(),
       predictor_variables_exponential = c(),
-      predictor_variables_log = c()
+      predictor_variables_log = c(),
+      predictor_variable_plot = ""
     )
   
   model_variables <- reactive({
-    c(context$relations$outcome_variable, context$relations$predictor_variables)
+    c(context$relations$outcome_variable, 
+      context$relations$predictor_variables, 
+      context$relations$predictor_variables_poly_2,
+      context$relations$predictor_variables_poly_3,
+      context$relations$predictor_variables_exponential,
+      context$relations$predictor_variables_log)
   }) %>% debounce(1000)
   
   ## update selectize choices ----
@@ -135,7 +191,11 @@ relationsServer <- function(input, output, session, context) {
         "relations-lm-predictor-variables-log")
     selected <- list(
       `relations-lm-outcome-variable` = context$relations$outcome_variable,
-      `relations-lm-predictor-variables` = context$relations$predictor_variables
+      `relations-lm-predictor-variables` = context$relations$predictor_variables,
+      `relations-lm-predictor-variables-poly-2` = context$relations$predictor_variables_poly_2,
+      `relations-lm-predictor-variables-poly-3` = context$relations$predictor_variables_poly_3,
+      `relations-lm-predictor-variables-exponential` = context$relations$predictor_variables_exponential,
+      `relations-lm-predictor-variables-log` = context$relations$predictor_variables_log
     )
     choices <- c("Select..." = "", context$model$variables)
     
@@ -156,8 +216,11 @@ relationsServer <- function(input, output, session, context) {
       choices = context$relations$predictor_variables,
       selected = input$`relations-lm-plot-predictor-variable`
     )
-  }) %>% bindEvent(context$relations$predictor_variables)
-  
+  }) %>% bindEvent(context$relations$predictor_variables,
+                   context$relations$predictor_variables_poly_2,
+                   context$relations$predictor_variables_poly_3,
+                   context$relations$predictor_variables_exponential,
+                   context$relations$predictor_variables_log)
   
   updatePredictorChoicesPoly2 <- observe({
     updateSelectizeInput(
@@ -167,7 +230,7 @@ relationsServer <- function(input, output, session, context) {
       selected = input$`relations-lm-plot-predictor-variable-poly-2`
     )
   }) %>% bindEvent(context$relations$predictor_variables_poly_2)
-  
+
   updatePredictorChoicesPoly3 <- observe({
     updateSelectizeInput(
       session,
@@ -176,7 +239,7 @@ relationsServer <- function(input, output, session, context) {
       selected = input$`relations-lm-plot-predictor-variable-poly-3`
     )
   }) %>% bindEvent(context$relations$predictor_variables_poly_3)
-  
+
   updatePredictorChoicesExponential <- observe({
     updateSelectizeInput(
       session,
@@ -185,7 +248,7 @@ relationsServer <- function(input, output, session, context) {
       selected = input$`relations-lm-plot-predictor-variable-exponential`
     )
   }) %>% bindEvent(context$relations$predictor_variables_exponential)
-  
+
   updatePredictorChoicesLog <- observe({
     updateSelectizeInput(
       session,
@@ -194,7 +257,7 @@ relationsServer <- function(input, output, session, context) {
       selected = input$`relations-lm-plot-predictor-variable-log`
     )
   }) %>% bindEvent(context$relations$predictor_variables_log)
-  
+
   ## update context ----
   updateOutcomeVariable <- observe({
     context$relations$outcome_variable <- input$`relations-lm-outcome-variable`
@@ -207,10 +270,6 @@ relationsServer <- function(input, output, session, context) {
   updatePredictorVariables <- observe({
     context$relations$predictor_variables <- input$`relations-lm-predictor-variables`
   })
-  
-  updatePredictorVariablesNB <- observe({
-    context$relations$predictor_variables <- ""
-  }) %>% bindEvent(context$model$data_filtered())
   
   updatePredictorVariablesPoly2 <- observe({
     context$relations$predictor_variables_poly_2 <- input$`relations-lm-predictor-variables-poly-2`
@@ -229,16 +288,31 @@ relationsServer <- function(input, output, session, context) {
   })
   
   l_lm_input <- list(
-    partition = reactive({}),
-    validation = reactive({})
-  )
+    validation = reactive({
+      input$`relation-lm-validation`
+    }) %>% 
+      debounce(500),
+    partition = reactive({
+      input$`relation-lm-partition`
+    }) %>% 
+      debounce(500)
+    )
   
   ## update model data ----
   context$relations$lm <- reactive({
     if (context$relations$outcome_variable %in% names(context$model$data_filtered()) &&
         context$relations$outcome_variable != "" &&
-        length(context$relations$predictor_variables) >= 1) {
-      
+        (length(context$relations$predictor_variables) >= 1 |
+         length(context$relations$predictor_variables_poly_2) >= 1 |
+         length(context$relations$predictor_variables_poly_3) >= 1 |
+         length(context$relations$predictor_variables_exponential) >= 1 |
+         length(context$relations$predictor_variables_log) >= 1) &&
+        (l_lm_input$validation() == FALSE | (
+          l_lm_input$validation() == TRUE && 
+          l_lm_input$partition() < 1 &&
+          l_lm_input$partition() > 0)
+         )
+        ) { 
       l_out <- pacheck::fit_lm_metamodel(
         df = context$model$data_filtered(),
         y = context$relations$outcome_variable,
@@ -246,15 +320,11 @@ relationsServer <- function(input, output, session, context) {
         x_poly_2 = context$relations$predictor_variables_poly_2,
         x_poly_3 = context$relations$predictor_variables_poly_3,
         x_exp = context$relations$predictor_variables_exponential,
-        x_log = context$relations$predictor_variables_log)
+        x_log = context$relations$predictor_variables_log,
+        validation = l_lm_input$validation(),
+        partition = l_lm_input$partition()
+        )
       return(l_out)
-      # formula <-
-      #   as.formula(paste(
-      #     context$relations$outcome_variable,
-      #     "~",
-      #     paste(context$relations$predictor_variables, collapse = "+")
-      #   ))
-      # lm(formula, context$model$data_filtered(), na.action = "na.omit")
     }
   }) %>% debounce(500)
   
@@ -275,13 +345,27 @@ relationsServer <- function(input, output, session, context) {
       y_var <- context$relations$outcome_variable
       x_var <- input$`relations-lm-plot-predictor-variable`
       x_vars <- context$relations$predictor_variables
+      x_vars_poly_2 <- context$relations$predictor_variables_poly_2
+      x_vars_poly_3 <- context$relations$predictor_variables_poly_3
+      x_vars_exponential <- context$relations$predictor_variables_exponential
+      x_vars_log <- context$relations$predictor_variables_log
       
       if (is.null(x_var) || x_var == "") {
-        x_var <- x_vars %>% dplyr::first()
+        x_var <- c(x_vars, 
+                   x_vars_poly_2,
+                   x_vars_poly_3,
+                   x_vars_exponential,
+                   x_vars_log) %>% 
+          dplyr::first()
       }
       
       data <- context$model$data_filtered() %>%
-        dplyr::select(!!!x_vars, !!y_var)
+        dplyr::select(!!!x_vars, 
+                      !!x_vars_poly_2, 
+                      !!x_vars_poly_3,
+                      !!x_vars_exponential,
+                      !!x_vars_log,
+                      !!y_var)
       
       # predict at 100 points across the range of x
       pred_data <- tibble(.rows = 100)
@@ -292,13 +376,18 @@ relationsServer <- function(input, output, session, context) {
       
       # pin other variables at their means
       margins <- list()
-      for (var in x_vars) {
+      for (var in c(x_vars, 
+                    x_vars_poly_2, 
+                    x_vars_poly_3,
+                    x_vars_exponential,
+                    x_vars_log)) {
         if (var == x_var)
           next
         
         pred_data[[var]] <-
           margins[[var]] <- mean(data[[var]], na.rm = TRUE)
       }
+
       context$relations$margins(margins)
       
       predictions <- predict(context$relations$lm()$fit,
@@ -325,7 +414,11 @@ relationsServer <- function(input, output, session, context) {
         )
     }
   }) %>% bindEvent(context$relations$lm(),
-                   input$`relations-lm-plot-predictor-variable`)
+                   input$`relations-lm-plot-predictor-variable`,
+                   input$`relations-lm-plot-predictor-variable-poly-2`,
+                   input$`relations-lm-plot-predictor-variable-poly-3`,
+                   input$`relations-lm-plot-predictor-variable-exponential`,
+                   input$`relations-lm-plot-predictor-variable-log`)
   
   ### print/relations-lm-margins ----
   output$`relations-lm-margins` <- renderPrint({
@@ -361,4 +454,26 @@ relationsServer <- function(input, output, session, context) {
     # dsa takes a dependency on lm, which depends on data, inputs and output.
     # therefore, we only need a dependency on dsa here.
     bindEvent(context$relations$dsa())
+  
+  output$`relations-metamodel-validation-table` <- renderDataTable(
+    if(l_lm_input$validation() == TRUE &&
+       l_lm_input$partition() > 0 &&
+       l_lm_input$partition() < 1){
+    context$relations$lm$stats_validation()
+    }
+    ) %>% bindEvent(context$relation$lm(),
+                   l_lm_input$partition(),
+                   l_lm_input$validation()
+                   )
+
+  output$`relations-metamodel-validation-plot` <- renderPlot(
+    if(l_lm_input$validation() == TRUE &&
+       l_lm_input$partition() > 0 &&
+       l_lm_input$partition() < 1){
+    context$relations$lm$calibration_plot()
+    }
+    ) %>% bindEvent(context$relation$lm(),
+                   l_lm_input$partition(),
+                   l_lm_input$validation()
+                   )
 }
