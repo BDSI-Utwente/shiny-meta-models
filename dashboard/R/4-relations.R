@@ -123,7 +123,7 @@ relationsUI <- tabItem(
     width = 12,
     collapsed = TRUE,
         fluidRow(
-          p("This panel shows the calibration statistics in the validation set (R-squared, mean absolute error (MAE), and mean relative error (MRE)) and the calibration plot in the validation set"),
+          p("This panel shows the calibration statistics in the validation set (R-squared, mean absolute error, and mean relative error) and the calibration plot in the validation set."),
           column(
             6,
             dataTableOutput("relations-metamodel-validation-table")
@@ -314,15 +314,15 @@ relationsServer <- function(input, output, session, context) {
          l_lm_input$validation() == FALSE)
         ) {
       l_out <- pacheck::fit_lm_metamodel(
-        df = context$model$data_filtered(),
-        y = context$relations$outcome_variable,
-        x = context$relations$predictor_variables,
+        df = context$model$data_filtered() %>% as.data.frame(),
+        y_var  = context$relations$outcome_variable,
+        x_vars  = context$relations$predictor_variables,
         x_poly_2 = context$relations$predictor_variables_poly_2,
         x_poly_3 = context$relations$predictor_variables_poly_3,
         x_exp = context$relations$predictor_variables_exponential,
         x_log = context$relations$predictor_variables_log,
         validation = l_lm_input$validation(),
-        partition = l_lm_input$partition()
+        partition  = l_lm_input$partition()
         )
       return(l_out)
     }
