@@ -73,7 +73,7 @@ relationsUI <- tabItem(
       column(
         width = 4,
         checkboxInput(
-          "relation-lm-validation",
+          "relations-lm-validation",
           "Should validation of the metamodel be performed?",
           value = FALSE
           )
@@ -82,7 +82,7 @@ relationsUI <- tabItem(
       column(
         width = 4,
         numericInput(
-          "relation-lm-partition",
+          "relations-lm-partition",
           "Proportion of data to use to train the linear model (remainder will be used for validation)",
           min = 0,
           max = 1,
@@ -123,15 +123,16 @@ relationsUI <- tabItem(
     width = 12,
     collapsed = TRUE,
         fluidRow(
-        column(
-          6,
-          dataTableOutput("relations-metamodel-validation-table")
-          ),
-        column(
-          6,
-          plotOutput("relations-metamodel-validation-plot")
+          p("This panel shows the calibration statistics in the validation set (R-squared, mean absolute error (MAE), and mean relative error (MRE)) and the calibration plot in the validation set"),
+          column(
+            6,
+            dataTableOutput("relations-metamodel-validation-table")
+            ),
+          column(
+            6,
+            plotOutput("relations-metamodel-validation-plot")
+            )
           )
-        )
     ), # dan conditionele dat er wel een model gefit is, anders warning message
   
   ## DSA ----
@@ -289,11 +290,11 @@ relationsServer <- function(input, output, session, context) {
   
   l_lm_input <- list(
     validation = reactive({
-      input$`relation-lm-validation`
+      input$`relations-lm-validation`
     }) %>% 
       debounce(500),
     partition = reactive({
-      input$`relation-lm-partition`
+      input$`relations-lm-partition`
     }) %>% 
       debounce(500)
     )
@@ -307,12 +308,11 @@ relationsServer <- function(input, output, session, context) {
          length(context$relations$predictor_variables_poly_3) >= 1 |
          length(context$relations$predictor_variables_exponential) >= 1 |
          length(context$relations$predictor_variables_log) >= 1) &&
-        (l_lm_input$validation() == FALSE | (
-          l_lm_input$validation() == TRUE && 
+        ((l_lm_input$validation() == TRUE && 
           l_lm_input$partition() < 1 &&
-          l_lm_input$partition() > 0)
-         )
-        ) { 
+          l_lm_input$partition() > 0) | 
+         l_lm_input$validation() == FALSE)
+        ) {
       l_out <- pacheck::fit_lm_metamodel(
         df = context$model$data_filtered(),
         y = context$relations$outcome_variable,
@@ -461,7 +461,7 @@ relationsServer <- function(input, output, session, context) {
        l_lm_input$partition() < 1){
     context$relations$lm()$stats_validation
     }
-    ) %>% bindEvent(context$relation$lm())
+    ) %>% bindEvent(context$relations$lm())
 
   output$`relations-metamodel-validation-plot` <- renderPlot(
     if(l_lm_input$validation() == TRUE &&
@@ -469,5 +469,5 @@ relationsServer <- function(input, output, session, context) {
        l_lm_input$partition() < 1){
     context$relations$lm()$calibration_plot
     }
-    ) %>% bindEvent(context$relation$lm())
+    ) %>% bindEvent(context$relations$lm())
 }
