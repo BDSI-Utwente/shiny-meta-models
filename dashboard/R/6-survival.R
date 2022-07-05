@@ -4,7 +4,8 @@ survivalUI <- tabItem(
   box(
     width = 12,
     title = "Survival analysis check",
-    p("This tab allows to check whether survival models cross each other. <br> In this tab, PACBOARD identify whether the first survival curve is higher than the second at different point in time."),
+    p("This tab allows to check whether survival models cross each other. In this tab, PACBOARD identify whether the first survival curve is higher than the second at different point in time."),
+    hr(),
     fluidRow(
       column(
         width = 6,
@@ -28,7 +29,8 @@ survivalUI <- tabItem(
         )
       ),
     conditionalPanel(
-      condition = "input['survival-surv-mod-1'] == 'exponential'",
+      condition = "input['survival-surv-mod-1'] == 'exp'",
+      {
       fluidRow(
         column(
           width = 4,
@@ -40,9 +42,10 @@ survivalUI <- tabItem(
             )
           )
         )
+      }
       ),
     conditionalPanel(
-      condition = "input['survival-surv-mod-1'] == 'Weibull'",
+      condition = "input['survival-surv-mod-1'] == 'weibull'",
       fluidRow(
         column(
           width = 4,
@@ -88,7 +91,7 @@ survivalUI <- tabItem(
         )
       ),
     conditionalPanel(
-      condition = "input['survival-surv-mod-1'] == 'log-normal'",
+      condition = "input['survival-surv-mod-1'] == 'lnorm'",
       fluidRow(
         column(
           width = 4,
@@ -111,7 +114,7 @@ survivalUI <- tabItem(
       )
     ),
     conditionalPanel(
-      condition = "input['survival-surv-mod-1'] == 'log-logistic'",
+      condition = "input['survival-surv-mod-1'] == 'logis'",
       fluidRow(
         column(
           width = 4,
@@ -133,12 +136,13 @@ survivalUI <- tabItem(
         )
       )
     ),
+    hr(),
     fluidRow(
       column(
         width = 6,
         selectInput(
           "survival-surv-mod-2",
-          "First survival model",
+          "Second survival model",
           choices = c("Please select" = "", 
                       "exponential" = "exp", 
                       "Weibull" = "weibull", 
@@ -151,12 +155,12 @@ survivalUI <- tabItem(
         width = 6,
         textInput(
           "survival-surv-mod-2-name",
-          "Type here the name of the first survival model",
-          value = "first survival")
+          "Type here the name of the second survival model",
+          value = "second survival")
       )
     ),
     conditionalPanel(
-      condition = "input['survival-surv-mod-2'] == 'exponential'",
+      condition = "input['survival-surv-mod-2'] == 'exp'",
       fluidRow(
         column(
           width = 4,
@@ -170,7 +174,7 @@ survivalUI <- tabItem(
       )
     ),
     conditionalPanel(
-      condition = "input['survival-surv-mod-2'] == 'Weibull'",
+      condition = "input['survival-surv-mod-2'] == 'weibull'",
       fluidRow(
         column(
           width = 4,
@@ -216,7 +220,7 @@ survivalUI <- tabItem(
       )
     ),
     conditionalPanel(
-      condition = "input['survival-surv-mod-2'] == 'log-normal'",
+      condition = "input['survival-surv-mod-2'] == 'lnorm'",
       fluidRow(
         column(
           width = 4,
@@ -239,7 +243,7 @@ survivalUI <- tabItem(
       )
     ),
     conditionalPanel(
-      condition = "input['survival-surv-mod-2'] == 'log-logistic'",
+      condition = "input['survival-surv-mod-2'] == 'logis'",
       fluidRow(
         column(
           width = 4,
@@ -261,10 +265,11 @@ survivalUI <- tabItem(
         )
       )
     ),
+    hr(),
+    p("With the following inputs, determine the time period over which the survival should be compared"),
     fluidRow(
-      p("With the following inputs, determine the time period over which the survival should be compared"),
       column(
-        widht = 3,
+        width = 3,
         numericInput(
           "survival-time-from",
           "Start time period",
@@ -274,7 +279,7 @@ survivalUI <- tabItem(
         )
       ),
       column(
-        widht = 3,
+        width = 3,
         numericInput(
           "survival-time-to",
           "End time period",
@@ -284,7 +289,7 @@ survivalUI <- tabItem(
         )
       ),
       column(
-        widht = 3,
+        width = 3,
         numericInput(
           "survival-time-seq",
           "Intervals between the start and end of the time period",
@@ -294,7 +299,7 @@ survivalUI <- tabItem(
         )
       ),
       column(
-        widht = 3,
+        width = 3,
         numericInput(
           "survival-n-view-crossing",
           "Number of iterations to mention in which the first survival curve is higher than the second",
@@ -304,12 +309,15 @@ survivalUI <- tabItem(
         )
       )
     )
+    # ,
+    # textOutput("txt_selected")
     )
   )
 
 # SERVER ----
 survivalServer <- function(input, output, session, context) {
   context$survival <- reactiveValues(
+    survival_model_check = NULL,
     survival_model_1_exponential_rate = "",
     survival_model_1_weibull_shape = "",
     survival_model_1_weibull_scale = "",
@@ -327,7 +335,9 @@ survivalServer <- function(input, output, session, context) {
     survival_model_2_log_normal_meanlog = "",
     survival_model_2_log_normal_sdlog = "",
     survival_model_2_log_logistic_location = "",
-    survival_model_2_log_logistic_scale = ""
+    survival_model_2_log_logistic_scale = "",
+    v_params_mod_1 = c(),
+    v_params_mod_2 = c()
   )
   
   ## UI update observers ----
@@ -534,8 +544,54 @@ survivalServer <- function(input, output, session, context) {
     context$survival$survival_model_2_log_logistic_scale <- input$`survival-model-2-log-logistic-scale`
   }) %>% bindEvent(input$`survival-model-2-log-logistic-scale`)
   
+  ### context$survival$v_params_mod_1 ----
+  updateSurvivialModdel1Parameters <- observe({
+    if(l_inputs_surv_mod$surv_mod_1() == "exp") {
+      context$survival$v_params_mod_1 <- input$`survival-model-1-exponential-rate`
+    } else if(l_inputs_surv_mod$surv_mod_1() == "weibull"){
+      context$survival$v_params_mod_1 <- c(input$`survival-model-1-weibull-shape`, input$`survival-model-1-weibull-scale`)
+    } else if(l_inputs_surv_mod$surv_mod_1() == "gamma"){
+      context$survival$v_params_mod_1 <- c(input$`survival-model-1-gamma-shape`, input$`survival-model-1-gamma-rate`)
+    } else if(l_inputs_surv_mod$surv_mod_1() == "lnorm"){
+      context$survival$v_params_mod_1 <- c(input$`survival-model-1-log-normal-meanlog`, input$`survival-model-1-log-normal-sdlog`)
+    } else if(l_inputs_surv_mod$surv_mod_1() == "logis"){
+      context$survival$v_params_mod_1 <- c(input$`survival-model-1-log-logistic-location`, input$`survival-model-1-log-logistic-shape`)
+    }
+  }) %>% bindEvent(input$`survival-model-1-exponential-rate`,
+                   input$`survival-model-1-weibull-shape`, input$`survival-model-1-weibull-scale`,
+                   input$`survival-model-1-gamma-shape`, input$`survival-model-1-gamma-rate`,
+                   input$`survival-model-1-log-normal-meanlog`, input$`survival-model-1-log-normal-sdlog`,
+                   input$`survival-model-1-log-logistic-location`, input$`survival-model-1-log-logistic-shape`,
+                   l_inputs_surv_mod$surv_mod_1())
+  
+  ### context$survival$v_params_mod_2 ----
+  updateSurvivialModdel2Parameters <- observe({
+    if(l_inputs_surv_mod$surv_mod_2() == "exp") {
+      context$survival$v_params_mod_2 <- input$`survival-model-2-exponential-rate`
+    } else if(l_inputs_surv_mod$surv_mod_2() == "weibull"){
+      context$survival$v_params_mod_2 <- c(input$`survival-model-2-weibull-shape`, input$`survival-model-2-weibull-scale`)
+    } else if(l_inputs_surv_mod$surv_mod_2() == "gamma"){
+      context$survival$v_params_mod_2 <- c(input$`survival-model-2-gamma-shape`, input$`survival-model-2-gamma-rate`)
+    } else if(l_inputs_surv_mod$surv_mod_2() == "lnorm"){
+      context$survival$v_params_mod_2 <- c(input$`survival-model-2-log-normal-meanlog`, input$`survival-model-2-log-normal-sdlog`)
+    } else if(l_inputs_surv_mod$surv_mod_2() == "logis"){
+      context$survival$v_params_mod_2 <- c(input$`survival-model-2-log-logistic-location`, input$`survival-model-2-log-logistic-shape`)
+    }
+  }) %>% bindEvent(input$`survival-model-2-exponential-rate`,
+                   input$`survival-model-2-weibull-shape`, input$`survival-model-2-weibull-scale`,
+                   input$`survival-model-2-gamma-shape`, input$`survival-model-2-gamma-rate`,
+                   input$`survival-model-2-log-normal-meanlog`, input$`survival-model-2-log-normal-sdlog`,
+                   input$`survival-model-2-log-logistic-location`, input$`survival-model-2-log-logistic-shape`,
+                   l_inputs_surv_mod$surv_mod_2())
+  
   ## SERVER update other objects ----
   l_inputs_surv_mod <- list(
+    surv_mod_1  = reactive({
+      input$`survival-surv-mod-1`
+    }) %>% debounce(500),
+    surv_mod_2  = reactive({
+      input$`survival-surv-mod-2`
+    }) %>% debounce(500),
     label_surv_1  = reactive({
       input$`survival-surv-mod-1-name`
     }) %>% debounce(500),
@@ -557,6 +613,37 @@ survivalServer <- function(input, output, session, context) {
   )
   
   ## OUTPUT ----
-  ### ----
+  ### context$survival$survival_model_check----
+  # context$survival$survival_model_check <- reactive({
+  #   if(#l_inputs_surv_mod$surv_mod_1 != "" &&
+  #      #l_inputs_surv_mod$surv_mod_2 != "" &&
+  #      ((length(context$survival$v_params_mod_1) == 1 &&
+  #        l_inputs_surv_mod$surv_mod_1() == "exp") | 
+  #       (length(context$survival$v_params_mod_1) == 2 &&
+  #       l_inputs_surv_mod$surv_mod_1() != "exp")
+  #       ) &&
+  #      ((length(context$survival$v_params_mod_2) == 1 &&
+  #        l_inputs_surv_mod$surv_mod_2() == "exp") | 
+  #       (length(context$survival$v_params_mod_2) == 2 &&
+  #        l_inputs_surv_mod$surv_mod_2() != "exp")
+  #      )
+  #      ) {
+  #     
+  #   l_check_surv_mode <- pacheck::check_surv_mod(
+  #     df = context$model$data_filtered() %>% as.data.frame(),
+  #     surv_mod_1 = l_inputs_surv_mod$surv_mod_1(),
+  #     surv_mod_2 = l_inputs_surv_mod$surv_mod_2(),
+  #     v_names_param_mod_1 = ,
+  #     v_names_param_mod_2 = ,
+  #     time = seq(l_inputs_surv_mod$time_from(),
+  #                l_inputs_surv_mod$time_to(),
+  #                l_inputs_surv_mod$time_seq()),
+  #     label_surv_1 = l_inputs_surv_mod$label_surv_1(),
+  #     label_surv_2 = l_inputs_surv_mod$label_surv_2(),
+  #     n_view = l_inputs_surv_mod$n_view()
+  #     )
+  #   }
+  #   })
   
-  }
+  #output$txt_selected <- renderText({context$survival$v_params_mod_1})
+   }
