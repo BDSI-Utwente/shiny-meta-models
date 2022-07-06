@@ -308,9 +308,28 @@ survivalUI <- tabItem(
           value = 10
         )
       )
-    )
-    # ,
-    # textOutput("txt_selected")
+    ),
+    ### textoutput/txt_surv_mod_check ----
+    textOutput("txt_surv_mod_check")
+    ),
+  box(
+    width = 12,
+    title = "Survival analysis plot",
+    collapsed = TRUE,
+    p("This tab allows you to plot the survival model for a specific iteration, using the above-selected inputs."),
+    fluidRow(
+      column(
+        width = 4,
+        numericInput(
+          "survival-plot-iteration",
+          "Interation to plot",
+          min = 0,
+          max = Inf,
+          value = 0)
+        )
+      ),
+    ### plotoutput/plot_survival_models ----
+    plotOutput("plot_survival_models")
     )
   )
 
@@ -544,10 +563,10 @@ survivalServer <- function(input, output, session, context) {
     context$survival$survival_model_2_log_logistic_scale <- input$`survival-model-2-log-logistic-scale`
   }) %>% bindEvent(input$`survival-model-2-log-logistic-scale`)
   
-  ### context$survival$v_params_mod_1 ----
+  # ### context$survival$v_params_mod_1 ----
   updateSurvivialModdel1Parameters <- observe({
     if(l_inputs_surv_mod$surv_mod_1() == "exp") {
-      context$survival$v_params_mod_1 <- input$`survival-model-1-exponential-rate`
+      context$survival$v_params_mod_1 <- context$survival$survival_model_1_exponential_rate
     } else if(l_inputs_surv_mod$surv_mod_1() == "weibull"){
       context$survival$v_params_mod_1 <- c(input$`survival-model-1-weibull-shape`, input$`survival-model-1-weibull-scale`)
     } else if(l_inputs_surv_mod$surv_mod_1() == "gamma"){
@@ -563,11 +582,11 @@ survivalServer <- function(input, output, session, context) {
                    input$`survival-model-1-log-normal-meanlog`, input$`survival-model-1-log-normal-sdlog`,
                    input$`survival-model-1-log-logistic-location`, input$`survival-model-1-log-logistic-shape`,
                    l_inputs_surv_mod$surv_mod_1())
-  
+
   ### context$survival$v_params_mod_2 ----
   updateSurvivialModdel2Parameters <- observe({
     if(l_inputs_surv_mod$surv_mod_2() == "exp") {
-      context$survival$v_params_mod_2 <- input$`survival-model-2-exponential-rate`
+      context$survival$v_params_mod_2 <- context$survival$survival_model_2_exponential_rate
     } else if(l_inputs_surv_mod$surv_mod_2() == "weibull"){
       context$survival$v_params_mod_2 <- c(input$`survival-model-2-weibull-shape`, input$`survival-model-2-weibull-scale`)
     } else if(l_inputs_surv_mod$surv_mod_2() == "gamma"){
@@ -583,7 +602,7 @@ survivalServer <- function(input, output, session, context) {
                    input$`survival-model-2-log-normal-meanlog`, input$`survival-model-2-log-normal-sdlog`,
                    input$`survival-model-2-log-logistic-location`, input$`survival-model-2-log-logistic-shape`,
                    l_inputs_surv_mod$surv_mod_2())
-  
+
   ## SERVER update other objects ----
   l_inputs_surv_mod <- list(
     surv_mod_1  = reactive({
@@ -609,41 +628,79 @@ survivalServer <- function(input, output, session, context) {
     }) %>% debounce(500),
     n_view = reactive({
       input$`survival-n-view-crossing`
+    }) %>% debounce(500),
+    iteration = reactive({
+      input$`survival-plot-iteration`
     }) %>% debounce(500)
   )
   
   ## OUTPUT ----
   ### context$survival$survival_model_check----
-  # context$survival$survival_model_check <- reactive({
-  #   if(#l_inputs_surv_mod$surv_mod_1 != "" &&
-  #      #l_inputs_surv_mod$surv_mod_2 != "" &&
-  #      ((length(context$survival$v_params_mod_1) == 1 &&
-  #        l_inputs_surv_mod$surv_mod_1() == "exp") | 
-  #       (length(context$survival$v_params_mod_1) == 2 &&
-  #       l_inputs_surv_mod$surv_mod_1() != "exp")
-  #       ) &&
-  #      ((length(context$survival$v_params_mod_2) == 1 &&
-  #        l_inputs_surv_mod$surv_mod_2() == "exp") | 
-  #       (length(context$survival$v_params_mod_2) == 2 &&
-  #        l_inputs_surv_mod$surv_mod_2() != "exp")
-  #      )
-  #      ) {
-  #     
-  #   l_check_surv_mode <- pacheck::check_surv_mod(
-  #     df = context$model$data_filtered() %>% as.data.frame(),
-  #     surv_mod_1 = l_inputs_surv_mod$surv_mod_1(),
-  #     surv_mod_2 = l_inputs_surv_mod$surv_mod_2(),
-  #     v_names_param_mod_1 = ,
-  #     v_names_param_mod_2 = ,
-  #     time = seq(l_inputs_surv_mod$time_from(),
-  #                l_inputs_surv_mod$time_to(),
-  #                l_inputs_surv_mod$time_seq()),
-  #     label_surv_1 = l_inputs_surv_mod$label_surv_1(),
-  #     label_surv_2 = l_inputs_surv_mod$label_surv_2(),
-  #     n_view = l_inputs_surv_mod$n_view()
-  #     )
-  #   }
-  #   })
-  
-  #output$txt_selected <- renderText({context$survival$v_params_mod_1})
+  context$survival$survival_model_check <- reactive({
+    if(l_inputs_surv_mod$surv_mod_1() != "" &&
+       l_inputs_surv_mod$surv_mod_2() != "" &&
+       ((length(context$survival$v_params_mod_1) == 1 &&
+         l_inputs_surv_mod$surv_mod_1() == "exp") |
+        (length(context$survival$v_params_mod_1) == 2 &&
+        l_inputs_surv_mod$surv_mod_1() != "exp")
+        ) &&
+       ((length(context$survival$v_params_mod_2) == 1 &&
+         l_inputs_surv_mod$surv_mod_2() == "exp") |
+        (length(context$survival$v_params_mod_2) == 2 &&
+         l_inputs_surv_mod$surv_mod_2() != "exp")
+       )
+       ) {
+
+    l_check_surv_mod <- pacheck::check_surv_mod(
+      df = context$model$data_filtered() %>% as.data.frame(),
+      surv_mod_1 = l_inputs_surv_mod$surv_mod_1(),
+      surv_mod_2 = l_inputs_surv_mod$surv_mod_2(),
+      v_names_param_mod_1 = context$survival$v_params_mod_1,
+      v_names_param_mod_2 = context$survival$v_params_mod_2,
+      time = seq(l_inputs_surv_mod$time_from(),
+                 l_inputs_surv_mod$time_to(),
+                 l_inputs_surv_mod$time_seq()),
+      label_surv_1 = l_inputs_surv_mod$label_surv_1(),
+      label_surv_2 = l_inputs_surv_mod$label_surv_2(),
+      n_view = l_inputs_surv_mod$n_view()
+      )
+    }
+    })
+  ### output$txt_surv_mod_check ----
+  output$txt_surv_mod_check <- renderText({
+    context$survival$survival_model_check()$message
+    })
+  ### output$plot_survival_models----
+  output$plot_survival_models <- renderPlot({
+    if(l_inputs_surv_mod$surv_mod_1() != "" &&
+       l_inputs_surv_mod$surv_mod_2() != "" &&
+       l_inputs_surv_mod$iteration() != 0 &&
+       ((length(context$survival$v_params_mod_1) == 1 &&
+         l_inputs_surv_mod$surv_mod_1() == "exp") |
+        (length(context$survival$v_params_mod_1) == 2 &&
+         l_inputs_surv_mod$surv_mod_1() != "exp")
+       ) &&
+       ((length(context$survival$v_params_mod_2) == 1 &&
+         l_inputs_surv_mod$surv_mod_2() == "exp") |
+        (length(context$survival$v_params_mod_2) == 2 &&
+         l_inputs_surv_mod$surv_mod_2() != "exp")
+       )
+    ) {
+      
+      p_out <- pacheck::plot_surv_mod(
+        df = context$model$data_filtered() %>% as.data.frame(),
+        surv_mod_1 = l_inputs_surv_mod$surv_mod_1(),
+        surv_mod_2 = l_inputs_surv_mod$surv_mod_2(),
+        v_names_param_mod_1 = context$survival$v_params_mod_1,
+        v_names_param_mod_2 = context$survival$v_params_mod_2,
+        time = seq(l_inputs_surv_mod$time_from(),
+                   l_inputs_surv_mod$time_to(),
+                   l_inputs_surv_mod$time_seq()),
+        label_surv_1 = l_inputs_surv_mod$label_surv_1(),
+        label_surv_2 = l_inputs_surv_mod$label_surv_2(),
+        iteration = l_inputs_surv_mod$iteration()
+      )
+      p_out
+    }
+  })
    }
