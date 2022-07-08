@@ -1,9 +1,10 @@
 library(shiny)
 library(tidyverse)
 
-options(shiny.autoreload = TRUE,
-        shiny.maxRequestSize = 30 * 1024 ^ 2
-        )
+options(
+  shiny.autoreload = TRUE,
+  shiny.maxRequestSize = 30 * 1024 ^ 2
+)
 
 ui <- dashboardPage(
   title = "PACBOARD",
