@@ -234,6 +234,10 @@ dataUI <- tabItem(
   box(
     title = "Calculate incrementals and net benefits",
     width = 12,
+    span(
+      class = "text-muted",
+      "Using the buttons below, you can calculate the incremental QALYs and costs, and the (incremental) net benefits at the willingness-to-pay of your choice if these outcomes are not already available in your dataset."
+      ),
     numericInput("wtp_data", 
                  "Choose your willingness to pay",
                  value = 50000,
@@ -252,8 +256,13 @@ dataUI <- tabItem(
     
   ## ui/summary-quick-checks ----
   box(
-    width = 12,
     title = "Quick checks",
+    width = 12,
+    collapsed = TRUE,
+    span(
+      class = "text-muted",
+      "This box shows the results of quick checks which are automatically performed once you have defined the different types of inputs and outputs in your dataset."
+    ),
     uiOutput("summary-quick-checks")
   ),
   
@@ -261,6 +270,11 @@ dataUI <- tabItem(
   box(
     title = "Data Preview",
     width = 12,
+    collapsed = TRUE,
+    span(
+      class = "text-muted",
+      "This box shows the uploaded dataset."
+    ),
     div(style = "overflow: auto;",
         dataTableOutput("modelPreview"))
   )
