@@ -7,7 +7,6 @@ library(purrr)
 library(readr)
 library(vroom)
 library(glue)
-library(pacheck)
 
 source("functions/cautiously.R")
 safeRead <- cautiously(vroom)
@@ -17,14 +16,18 @@ dataUI <- tabItem(
   "data",
   box(
     title = "Upload data",
+    p("Browse your computer to upload your data. The accepted format is '.csv'.", 
+      br(),
+      strong("The first row of the dataset should contain the names of the inputs and outputs.")
+      ),
     width = 12,
     fileInput("model_file",
               "Model file",
               accept = c(".csv",
-                         # ".xls",
-                         # ".xlsx",
-                         # ".rdata",
-                         # ".rds",
+                         #".xls",
+                         #".xlsx",
+                         #".rdata",
+                         #".rds",
                          # "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                          # # is apparently also used for csv - confusing!
                          # "application/vnd.ms-excel"
