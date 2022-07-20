@@ -60,6 +60,10 @@ summaryUI <- tabItem(
     width = 12,
     title = "Summary statistics",
     collapsed = TRUE,
+    span(
+      class = "text-muted",
+      "This box shows the summary statistics of the variables selected above."
+    ),
     div(
       width = "100%",
       style = "overflow: auto;",
@@ -70,6 +74,11 @@ summaryUI <- tabItem(
     width = 12,
     title = "Correlation matrix",
     collapsed = TRUE,
+    collapsed = TRUE,
+    span(
+      class = "text-muted",
+      "This box shows the correlation between the variables selected above."
+    ),
     div(
       width = "100%",
       style = "overflow: auto;",
@@ -84,6 +93,10 @@ summaryUI <- tabItem(
     width = 12,
     title = "Univariate distributions",
     collapsed = TRUE,
+    span(
+      class = "text-muted",
+      "In this box, you can investigate the distribution of a single variable. You can also fit different statisticall distribution to the data."
+    ),
     ### selectizeInput/summary-distribution-variable ----
     selectizeInput(
       "summary-distribution-variable",
@@ -177,6 +190,10 @@ summaryUI <- tabItem(
     width = 12,
     title = "Bivariate distributions",
     collapsed = TRUE,
+    span(
+      class = "text-muted",
+      "In this box, you can investigate the distribution of two variables and check whether the first is greater than the second."
+    ),
     fluidRow(column(
       6,
       ### selectize/summary-bivariate-distribution-x-variable ----
