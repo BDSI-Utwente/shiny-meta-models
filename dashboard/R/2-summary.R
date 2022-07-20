@@ -17,6 +17,12 @@ summaryUI <- tabItem(
   box(
     width = 12,
     title = "Select variables for summary statistics",
+    span(
+      class = "text-muted",
+      "Using the input field below, you can select the input and output variables which you want to include in the", em("Summary statistics"), "-box (e.g. min, max, mean,...) below and which should be included in the correlation matrix(", em("Correlation matrix"), "-box).", 
+      br(),
+      "You can also use the buttons to select an entire group of parameter (defined in the", strong("Prepare data-tab"), ")",
+    ),
     ## selectizeInput/summary-statistics-variables ----
     selectizeInput(
       "summary-statistics-variables",
