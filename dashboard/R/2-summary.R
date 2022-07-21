@@ -192,7 +192,9 @@ summaryUI <- tabItem(
     collapsed = TRUE,
     span(
       class = "text-muted",
-      "In this box, you can investigate the distribution of two variables and check whether the first is greater than the second."
+      "In this box, you can draw a scatterplot of two variables and check whether the first is greater than the second.", 
+      br(),
+      "You can also fit a regression line through the scatterplot to investigate a potential relation between these two variables."
     ),
     fluidRow(column(
       6,
