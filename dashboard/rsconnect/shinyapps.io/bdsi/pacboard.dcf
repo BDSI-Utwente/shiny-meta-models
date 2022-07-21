@@ -1,0 +1,14 @@
+name: pacboard
+title: pacboard
+username:
+account: bdsi
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 6073162
+bundleId: 5798370
+url: https://bdsi.shinyapps.io/pacboard/
+when: 1649943771.67514
+lastSyncTime: 1649943771.67514
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: .lintr|.RData|.Rprofile|.vscode/extensions.json|.vscode/settings.json|TODO.md
