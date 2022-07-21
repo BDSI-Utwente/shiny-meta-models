@@ -274,9 +274,9 @@ summaryUI <- tabItem(
     width = 12,
     title = "Check sum of probabilities",
     collapsed = TRUE,
-    p(
+    span(
       class = "text-muted",
-      "In this box, you can sum up multiple probability variables to check whether they remain lower than or are equal to 1"
+      "In this box, you can sum up multiple probability variables to check whether they remain lower than or are equal to 1."
     ),
     fluidRow(column(
       6,
