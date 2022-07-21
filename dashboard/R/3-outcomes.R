@@ -14,10 +14,11 @@ outcomesUI <- tabItem(
       class = "text-muted",
       "This box displays the incremental QALYs versus the incremental effects of the intervention versus the comparator.",
       br(),
-      "The proportion of iterations in each of the four quadrants of the plane is also provided."
+      "The proportion of iterations in each of the four quadrants of the plane is also provided.",
+      br()
     ),
     conditionalPanel(
-      "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
+      "input['outcomes-intervention-total-discounted-costs'] != '' && input['outcomes-intervention-total-discounted-qalys'] != '' && input['outcomes-comparator-total-discounted-costs'] != '' && input['outcomes-comparator-total-discounted-qalys'] != ''",
       fluidRow(
         column(
           width = 3,
@@ -60,9 +61,9 @@ outcomesUI <- tabItem(
                       tableOutput("ice_summary")))
     ),
     conditionalPanel(
-      "input['outcomes-intervention-total-costs'] == '' || input['outcomes-intervention-total-effects'] == '' || input['outcomes-comparator-total-costs'] == '' || input['outcomes-comparator-total-effects'] == ''",
+      "input['outcomes-intervention-total-discounted-costs'] == '' || input['outcomes-intervention-total-discounted-qalys'] == '' || input['outcomes-comparator-total-discounted-costs'] == '' || input['outcomes-comparator-total-discounted-qalys'] == ''",
       bs4Dash::bs4Callout(
-        "You must load a data set and select total costs and effects variables for the intervention and comparator conditions before a cost-effectiveness plane can be created.",
+        "You must load a dataset and select total discounted costs and QALYs variables for the intervention and comparator in the 'Prepare data'-tab before a cost-effectiveness plane can be created.",
         title = "Select outcome variables",
         status = "info",
         width = 12
@@ -76,19 +77,20 @@ outcomesUI <- tabItem(
     collapsed = TRUE,
     span(
       class = "text-muted",
-      "This box displays the total QALYs versus the total effects of the intervention and the comparator."
+      "This box displays the total discounted QALYs versus the total discounted  effects of the intervention and the comparator.",
+      br()
     ),
     fluidRow(column(
       width = 12,
       conditionalPanel(
-        "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
+        "input['outcomes-intervention-total-discounted-costs'] != '' && input['outcomes-intervention-total-discounted-qalys'] != '' && input['outcomes-comparator-total-discounted-costs'] != '' && input['outcomes-comparator-total-discounted-qalys'] != ''",
         ### plotly/ce_plane ----
         plotOutput("ce_plane")
       ),
       conditionalPanel(
-        "input['outcomes-intervention-total-costs'] == '' || input['outcomes-intervention-total-effects'] == '' || input['outcomes-comparator-total-costs'] == '' || input['outcomes-comparator-total-effects'] == ''",
+        "input['outcomes-intervention-total-discounted-costs'] == '' || input['outcomes-intervention-total-discounted-qalys'] == '' || input['outcomes-comparator-total-discounted-costs'] == '' || input['outcomes-comparator-total-discounted-qalys'] == ''",
         bs4Dash::bs4Callout(
-          "You must load a data set and select total costs and effects variables for the intervention and comparator conditions before a cost-effectiveness plane can be created.",
+          "You must load a dataset and select total discounted costs and QALYs variables for the intervention and comparator in the 'Prepare data'-tab before a cost-effectiveness plane can be created.",
           title = "Select outcome variables",
           status = "info",
           width = 12
@@ -106,10 +108,11 @@ outcomesUI <- tabItem(
       class = "text-muted",
       "This box displays the (incremental) net benefits.",
       br(),
-      "You can modify the willingness-to-pay threshold at which these net benefits are calculated and decide whether you want to display the net health or monetary benefits of the intervention and the comparator, eventually in combination with the incremental net health or monetary benefit."
+      "You can modify the willingness-to-pay threshold at which these net benefits are calculated and decide whether you want to display the net health or monetary benefits of the intervention and the comparator, eventually in combination with the incremental net health or monetary benefit.",
+      br()
     ),
     conditionalPanel(
-        "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
+        "input['outcomes-intervention-total-discounted-costs'] != '' && input['outcomes-intervention-total-discounted-qalys'] != '' && input['outcomes-comparator-total-discounted-costs'] != '' && input['outcomes-comparator-total-discounted-qalys'] != ''",
         fluidRow(
           ### numeric/outcomes-nb-wtp ----
         column(
@@ -151,17 +154,17 @@ outcomesUI <- tabItem(
         ),
         ### plotly/nb_plot ----
         plotOutput("nb_plot")
-      ),
+        )
+        ),
       conditionalPanel(
-        "input['outcomes-intervention-total-costs'] == '' || input['outcomes-intervention-total-effects'] == '' || input['outcomes-comparator-total-costs'] == '' || input['outcomes-comparator-total-effects'] == ''",
+        "input['outcomes-intervention-total-discounted-costs'] == '' || input['outcomes-intervention-total-discounted-qalys'] == '' || input['outcomes-comparator-total-discounted-costs'] == '' || input['outcomes-comparator-total-discounted-qalys'] == ''",
         bs4Dash::bs4Callout(
-          "You must load a data set and select total costs and effects variables for the intervention and comparator conditions before the net benefit curves can be created.",
+          "You must load a dataset and select total discounted costs and QALYs variables for the intervention and comparator in the 'Prepare data'-tab before the net benefit curves can be created.",
           title = "Select outcome variables",
           status = "info",
           width = 12
         )
       )
-    )
     ),
   ## CEAC ----
   box(
@@ -172,10 +175,11 @@ outcomesUI <- tabItem(
       class = "text-muted",
       "This box displays the cost-effectiveness acceptability curves (CEACs) for the intervention and the comparator.",
       br(),
-      "You can modify the willingness-to-pay range at which the CEACs are calculated and displayed."
+      "You can modify the willingness-to-pay range at which the CEACs are calculated and displayed.",
+      br()
     ),
     conditionalPanel(
-      "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
+      "input['outcomes-intervention-total-discounted-costs'] != '' && input['outcomes-intervention-total-discounted-qalys'] != '' && input['outcomes-comparator-total-discounted-costs'] != '' && input['outcomes-comparator-total-discounted-qalys'] != ''",
       h5("Willingness to pay"),
       fluidRow(
         column(
@@ -226,9 +230,9 @@ outcomesUI <- tabItem(
                ))
     ),
     conditionalPanel(
-      "input['outcomes-intervention-total-costs'] == '' || input['outcomes-intervention-total-effects'] == '' || input['outcomes-comparator-total-costs'] == '' || input['outcomes-comparator-total-effects'] == ''",
+      "input['outcomes-intervention-total-discounted-costs'] == '' || input['outcomes-intervention-total-discounted-qalys'] == '' || input['outcomes-comparator-total-discounted-costs'] == '' || input['outcomes-comparator-total-discounted-qalys'] == ''",
       bs4Dash::bs4Callout(
-        "You must load a data set and select total costs and effects variables for the intervention and comparator conditions before a cost-effectiveness acceptability curve can be created.",
+        "You must load a dataset and select total discounted costs and QALYs variables for the intervention and comparator in the 'Prepare data'-tab before the cost-effectiveness acceptability curve can be created.",
         title = "Select outcome variables",
         status = "info",
         width = 12
@@ -245,7 +249,8 @@ outcomesUI <- tabItem(
       br(),
       "You can also plot the relative difference in mean between the blocks by typing a number between 0 and 1 in the", strong(em("Relative change threshold")), " input field.",
       br(),
-      "These outcomes can also be calculated based on the variance by ticking the box."
+      "These outcomes can also be calculated based on the variance by ticking the box.",
+      br()
       ),
     collapsed = TRUE,
     fluidRow(
@@ -321,6 +326,14 @@ outcomesUI <- tabItem(
           dataTableOutput("convergence_table")
         )
       ))
+    ),
+    conditionalPanel(
+      "input['outcomes-convergence-variable'] == ''",
+      bs4Dash::bs4Callout(
+        title = "Select variable",
+        status = "info",
+        "To see the 'convergence plot and table', you first have to select a variable."
+      )
     )
   )
 )
