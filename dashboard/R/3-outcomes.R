@@ -254,7 +254,7 @@ outcomesUI <- tabItem(
         ### selectize/outcomes-convergence-variable ----
         selectizeInput(
           "outcomes-convergence-variable",
-          label = "Outcome variable",
+          label = "Variable",
           multiple = FALSE,
           choices = c("no data loaded..." = "")
         )
@@ -314,8 +314,12 @@ outcomesUI <- tabItem(
       ),
       column(
         width = 4,
-        ### dataTable/convergence_table ----
-        dataTableOutput("convergence_table")
+        div(
+          width = "100%",
+          style = "overflow: auto;",
+          ### dataTable/convergence_table ----
+          dataTableOutput("convergence_table")
+        )
       ))
     )
   )
