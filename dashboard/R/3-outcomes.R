@@ -10,6 +10,12 @@ outcomesUI <- tabItem(
     width = 12,
     title = "Incremental cost-effectiveness plane",
     collapsed = TRUE,
+    span(
+      class = "text-muted",
+      "This box displays the incremental QALYs versus the incremental effects of the intervention versus the comparator.",
+      br(),
+      "The proportion of iterations in each of the four quadrants of the plane is also provided."
+    ),
     conditionalPanel(
       "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
       fluidRow(
@@ -68,6 +74,10 @@ outcomesUI <- tabItem(
     width = 12,
     title = "Cost-effectiveness plane",
     collapsed = TRUE,
+    span(
+      class = "text-muted",
+      "This box displays the total QALYs versus the total effects of the intervention and the comparator."
+    ),
     fluidRow(column(
       width = 12,
       conditionalPanel(
@@ -92,6 +102,12 @@ outcomesUI <- tabItem(
     width = 12,
     title = "Net benefits plane",
     collapsed = TRUE,
+    span(
+      class = "text-muted",
+      "This box displays the (incremental) net benefits.",
+      br(),
+      "You can modify the willingness-to-pay threshold at which these net benefits are calculated and decide whether you want to display the net health or monetary benefits of the intervention and the comparator, eventually in combination with the incremental net health or monetary benefit."
+    ),
     conditionalPanel(
         "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
         fluidRow(
@@ -152,9 +168,14 @@ outcomesUI <- tabItem(
     width = 12,
     title = "Cost-effectiveness acceptability curve",
     collapsed = TRUE,
+    span(
+      class = "text-muted",
+      "This box displays the cost-effectiveness acceptability curves (CEACs) for the intervention and the comparator.",
+      br(),
+      "You can modify the willingness-to-pay range at which the CEACs are calculated and displayed."
+    ),
     conditionalPanel(
       "input['outcomes-intervention-total-costs'] != '' && input['outcomes-intervention-total-effects'] != '' && input['outcomes-comparator-total-costs'] != '' && input['outcomes-comparator-total-effects'] != ''",
-      
       h5("Willingness to pay"),
       fluidRow(
         column(
@@ -218,6 +239,14 @@ outcomesUI <- tabItem(
   box(
     width = 12,
     title = "Convergence check",
+    span(
+      class = "text-muted",
+      "This box displays the moving average of a variable of your choice in a plot and table. By default, the moving average is displayed in blocks of 500 iterations.",
+      br(),
+      "You can also plot the relative difference in mean between the blocks by inserting a number between 0 and 1 in the", strong(em("Relative change threshold")), " input field.",
+      br(),
+      "These outcomes can also be calculated based on the variance by ticking the box."
+      ),
     collapsed = TRUE,
     fluidRow(
       column(
@@ -235,10 +264,11 @@ outcomesUI <- tabItem(
         ### numeric/outcomes-convergence-block-size ----
         numericInput(
           "outcomes-convergence-block-size",
-          label = "Iteration block size (not yet implemented)",
+          label = "Number of iteration per block",
           min = 0,
           max = Inf,
-          value = 500
+          value = 500,
+          step = 1
         )
       ),
       column(
@@ -246,19 +276,46 @@ outcomesUI <- tabItem(
         ### numeric/outcomes-convergence-threshold ----
         numericInput(
           "outcomes-convergence-threshold",
-          label = "Relative change threshold (not yet implemented)",
+          label = "Relative change threshold",
           min = 0,
           max = 1,
-          value = 0.01
+          value = 0,
+          step = 0.01
+        )
+      ),
+      column(
+        width = 4,
+        ### numeric/outcomes-convergence-breaks ----
+        numericInput(
+          "outcomes-convergence-breaks",
+          label = "Number of iterations at which the breaks should be placed on the graph",
+          min = 0,
+          max = Inf,
+          value = 500,
+          step = 1
+        )
+      ),
+      column(
+        width = 4,
+        ### logical/outcomes-convergence-variance ----
+        checkboxInput(
+          "outcomes-convergence-variance",
+          label = "Should the variance of the variable be plotted instead of the mean?",
+          value = FALSE
         )
       )
     ),
     conditionalPanel(
       "input['outcomes-convergence-variable'] != ''",
       fluidRow(column(
-        width = 12,
+        width = 8,
         ### plotly/convergence_plot ----
         plotlyOutput("convergence_plot")
+      ),
+      column(
+        width = 4,
+        ### dataTable/convergence_table ----
+        dataTableOutput("convergence_table")
       ))
     )
   )
@@ -526,8 +583,14 @@ outcomesServer <- function(input, output, session, context) {
     block_size = reactive({
       input$`outcomes-convergence-block-size`
     }) %>% debounce(500),
-    threshold = reactive({
+    conv_limit = reactive({
       input$`outcomes-convergence-threshold`
+    }) %>% debounce(500),
+    breaks = reactive({
+      input$`outcomes-convergence-breaks`
+    }) %>% debounce(500),
+    variance = reactive({
+      input$`outcomes-convergence-variance`
     }) %>% debounce(500)
   )
   
@@ -565,6 +628,20 @@ outcomesServer <- function(input, output, session, context) {
           to = wtp$max(),
           by = wtp$step()
         )
+      )
+    }
+  })
+  
+  ### convergence_inputs ----
+  convergence_inputs <- reactive({
+    if (input$`outcomes-convergence-variable` != "") {
+      pacheck::plot_convergence(
+        df = context$model$data_filtered() %>% as.data.frame(),
+        outcome = input$`outcomes-convergence-variable`,
+        block_size = convergence$block_size(),
+        conv_limit = convergence$conv_limit(),
+        breaks = convergence$breaks(),
+        variance = convergence$variance()
       )
     }
   })
@@ -675,13 +752,11 @@ outcomesServer <- function(input, output, session, context) {
   
   ### plotly/convergence_plot ----
   output$convergence_plot <- renderPlotly({
-    if (input$`outcomes-convergence-variable` != "") {
-      pacheck::plot_convergence(
-        df = context$model$data_filtered() %>% as.data.frame(),
-        outcome = input$`outcomes-convergence-variable`,
-        block_size = convergence$block_size(),
-        conv_limit = convergence$threshold()
-      )
-    }
+    convergence_inputs()
+  })
+  
+  ### datatable/convergence_table
+  output$convergence_table <- renderDataTable({
+    convergence_inputs()$data
   })
 }
