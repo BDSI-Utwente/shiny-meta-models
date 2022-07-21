@@ -243,7 +243,7 @@ outcomesUI <- tabItem(
       class = "text-muted",
       "This box displays the moving average of a variable of your choice in a plot and table. By default, the moving average is displayed in blocks of 500 iterations.",
       br(),
-      "You can also plot the relative difference in mean between the blocks by inserting a number between 0 and 1 in the", strong(em("Relative change threshold")), " input field.",
+      "You can also plot the relative difference in mean between the blocks by typing a number between 0 and 1 in the", strong(em("Relative change threshold")), " input field.",
       br(),
       "These outcomes can also be calculated based on the variance by ticking the box."
       ),
