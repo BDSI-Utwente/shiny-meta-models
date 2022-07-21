@@ -74,7 +74,6 @@ summaryUI <- tabItem(
     width = 12,
     title = "Correlation matrix",
     collapsed = TRUE,
-    collapsed = TRUE,
     span(
       class = "text-muted",
       "This box shows the correlation between the variables selected above."
