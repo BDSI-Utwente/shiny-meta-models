@@ -92,7 +92,12 @@ relationsUI <- tabItem(
         )
       ),
     conditionalPanel(
-      "input['relations-lm-outcome-variable'] != '' && input['relations-lm-predictor-variables'].length >= 1",
+      "input['relations-lm-outcome-variable'] != '' && 
+      (input['relations-lm-predictor-variables'].length >= 1 ||
+      input['relations-lm-predictor-variables-poly-2'].length >= 1 ||
+      input['relations-lm-predictor-variables-poly-3'].length >= 1 ||
+      input['relations-lm-predictor-variables-exponential'].length >= 1 ||
+      input['relations-lm-predictor-variables-log'].length >= 1)",
       fluidRow(
         column(6,
                # TODO: Add some styling to raw text outputs?
@@ -115,6 +120,20 @@ relationsUI <- tabItem(
           )
         )
       )
+    ),
+    conditionalPanel(
+      "input['relations-lm-outcome-variable'] == '' || 
+      (input['relations-lm-predictor-variables'].length == 0 &&
+      input['relations-lm-predictor-variables-poly-2'].length == 0 &&
+      input['relations-lm-predictor-variables-poly-3'].length == 0 &&
+      input['relations-lm-predictor-variables-exponential'].length == 0 &&
+      input['relations-lm-predictor-variables-log'].length == 0)",
+      bs4Dash::bs4Callout(
+        "You must select an 'Outcome variable' and predictors to see the value of the predictors of the fitted linear metamodel.",
+        title = "Select outcome and predictor variables",
+        status = "info",
+        width = 12
+      )
     )
   ),
   ## Validation linear metamodel ----
@@ -122,19 +141,26 @@ relationsUI <- tabItem(
     title = "Validation metamodel",
     width = 12,
     collapsed = TRUE,
-        fluidRow(
-          p("This panel shows the calibration statistics in the validation set (R-squared, mean absolute error, and mean relative error) and the calibration plot in the validation set."),
-          column(
-            6,
-            dataTableOutput("relations-metamodel-validation-table")
-            ),
-          column(
-            6,
-            plotOutput("relations-metamodel-validation-plot")
-            )
+    conditionalPanel(
+      "input['relations-lm-validation'] == 'FALSE' || input['relations-lm-partition'] == 1",
+      bs4Dash::bs4Callout(
+        "You must tick the box 'Should validation be performed?' and reduce the proportion of data to use to train the linear model using the input field above to see the validation plot and statistics",
+        title = "Perform metamodel validation",
+        status = "info",
+        width = 12
+      )
+    ),fluidRow(
+      p("This panel shows the calibration statistics in the validation set (R-squared, mean absolute error, and mean relative error) and the calibration plot in the validation set."),
+        column(
+          width = 6,
+          dataTableOutput("relations-metamodel-validation-table")
+          ),
+        column(
+          width = 6,
+          plotOutput("relations-metamodel-validation-plot")
           )
-    ), # dan conditionele dat er wel een model gefit is, anders warning message
-  
+        )
+      ),# dan conditionele dat er wel een model gefit is, anders warning message
   ## DSA ----
   box(
     title = "Deterministic Sensitivity Analysis",
@@ -142,7 +168,6 @@ relationsUI <- tabItem(
     collapsed = TRUE,
     conditionalPanel(
       "input['relations-lm-outcome-variable'] != '' && input['relations-lm-predictor-variables'].length >= 2",
-      
       fluidRow(column(6,
                       ### plotly/relations-dsa-plot ----
                       plotlyOutput(
@@ -303,10 +328,10 @@ relationsServer <- function(input, output, session, context) {
   context$relations$lm <- reactive({
     if (context$relations$outcome_variable %in% names(context$model$data_filtered()) &&
         context$relations$outcome_variable != "" &&
-        (length(context$relations$predictor_variables) >= 1 |
-         length(context$relations$predictor_variables_poly_2) >= 1 |
-         length(context$relations$predictor_variables_poly_3) >= 1 |
-         length(context$relations$predictor_variables_exponential) >= 1 |
+        (length(context$relations$predictor_variables) >= 1 ||
+         length(context$relations$predictor_variables_poly_2) >= 1 ||
+         length(context$relations$predictor_variables_poly_3) >= 1 ||
+         length(context$relations$predictor_variables_exponential) >= 1 ||
          length(context$relations$predictor_variables_log) >= 1) &&
         ((l_lm_input$validation() == TRUE && 
           l_lm_input$partition() < 1 &&
@@ -326,7 +351,7 @@ relationsServer <- function(input, output, session, context) {
         )
       return(l_out)
     }
-  }) %>% debounce(500)
+  }) %>% debounce(1000)
   
   context$relations$margins <- reactiveVal()
   
