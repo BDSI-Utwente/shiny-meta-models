@@ -123,9 +123,9 @@ summaryUI <- tabItem(
           ### checkboxGroup/summary-distribution-fits ----
           checkboxGroupInput(
             "summary-distribution-fits",
-            "Fit a ... distribution",
-            label = c("normal", "beta", "gamma", "log-normal", "custom"),
-            choices = c(FIT_DISTRIBUTIONS, "custom"),
+            label = "Select distribution(s) to fit on variable:",
+            choiceNames = c("normal", "beta", "gamma", "log-normal", "custom"),
+            choiceValues  = c(FIT_DISTRIBUTIONS, "custom"),
             selected = NULL,
             inline = TRUE
           )
