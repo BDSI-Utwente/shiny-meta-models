@@ -10,12 +10,12 @@ outcomesUI <- tabItem(
     width = 12,
     title = "Incremental cost-effectiveness plane",
     collapsed = TRUE,
-    span(
-      class = "text-muted",
+    p(
       "This box displays the incremental QALYs versus the incremental effects of the intervention versus the comparator.",
       br(),
       "The proportion of iterations in each of the four quadrants of the plane is also provided.",
-      br()
+      br(),
+      "You can add a willingness-to-pay threshold line on the plane, highlight specific iterations, and add a colour based on values of a selected variable."
     ),
     conditionalPanel(
       "input['outcomes-intervention-total-discounted-costs'] != '' && input['outcomes-intervention-total-discounted-qalys'] != '' && input['outcomes-comparator-total-discounted-costs'] != '' && input['outcomes-comparator-total-discounted-qalys'] != ''",
@@ -25,7 +25,7 @@ outcomesUI <- tabItem(
           ### numeric/outcomes-willingness-to-pay ----
           numericInput(
             "outcomes-willingness-to-pay",
-            label = "Willingness to pay threshold",
+            label = "Willingness-to-pay threshold",
             value = NULL,
             # TODO: set meaningful default value?
             min = 0,
@@ -63,7 +63,7 @@ outcomesUI <- tabItem(
     conditionalPanel(
       "input['outcomes-intervention-total-discounted-costs'] == '' || input['outcomes-intervention-total-discounted-qalys'] == '' || input['outcomes-comparator-total-discounted-costs'] == '' || input['outcomes-comparator-total-discounted-qalys'] == ''",
       bs4Dash::bs4Callout(
-        "You must load a dataset and select total discounted costs and QALYs variables for the intervention and comparator in the 'Prepare data'-tab before a cost-effectiveness plane can be created.",
+        "You must load a dataset and select total discounted costs and QALYs variables for the intervention and comparator in the 'Prepare data'-tab before the incremental cost-effectiveness plane can be displayed.",
         title = "Select outcome variables",
         status = "info",
         width = 12
@@ -75,8 +75,7 @@ outcomesUI <- tabItem(
     width = 12,
     title = "Cost-effectiveness plane",
     collapsed = TRUE,
-    span(
-      class = "text-muted",
+    p(
       "This box displays the total discounted QALYs versus the total discounted  effects of the intervention and the comparator.",
       br()
     ),
@@ -90,7 +89,7 @@ outcomesUI <- tabItem(
       conditionalPanel(
         "input['outcomes-intervention-total-discounted-costs'] == '' || input['outcomes-intervention-total-discounted-qalys'] == '' || input['outcomes-comparator-total-discounted-costs'] == '' || input['outcomes-comparator-total-discounted-qalys'] == ''",
         bs4Dash::bs4Callout(
-          "You must load a dataset and select total discounted costs and QALYs variables for the intervention and comparator in the 'Prepare data'-tab before a cost-effectiveness plane can be created.",
+          "You must load a dataset and select total discounted costs and QALYs variables for the intervention and comparator in the 'Prepare data'-tab before the cost-effectiveness plane can be displayed.",
           title = "Select outcome variables",
           status = "info",
           width = 12
@@ -104,8 +103,7 @@ outcomesUI <- tabItem(
     width = 12,
     title = "Net benefits plane",
     collapsed = TRUE,
-    span(
-      class = "text-muted",
+    p(
       "This box displays the (incremental) net benefits.",
       br(),
       "You can modify the willingness-to-pay threshold at which these net benefits are calculated and decide whether you want to display the net health or monetary benefits of the intervention and the comparator, eventually in combination with the incremental net health or monetary benefit.",
@@ -119,7 +117,7 @@ outcomesUI <- tabItem(
           width = 3,
           numericInput(
             "outcomes-nb-wtp",
-            label = "Willingness to pay",
+            label = "Willingness-to-pay threshold",
             min = 0,
             max = Inf,
             value = 50000
@@ -171,8 +169,7 @@ outcomesUI <- tabItem(
     width = 12,
     title = "Cost-effectiveness acceptability curve",
     collapsed = TRUE,
-    span(
-      class = "text-muted",
+    p(
       "This box displays the cost-effectiveness acceptability curves (CEACs) for the intervention and the comparator.",
       br(),
       "You can modify the willingness-to-pay range at which the CEACs are calculated and displayed.",
@@ -180,7 +177,7 @@ outcomesUI <- tabItem(
     ),
     conditionalPanel(
       "input['outcomes-intervention-total-discounted-costs'] != '' && input['outcomes-intervention-total-discounted-qalys'] != '' && input['outcomes-comparator-total-discounted-costs'] != '' && input['outcomes-comparator-total-discounted-qalys'] != ''",
-      h5("Willingness to pay"),
+      p(strong("Willingness-to-pay threshold range to display")),
       fluidRow(
         column(
           width = 4,
@@ -243,13 +240,12 @@ outcomesUI <- tabItem(
   box(
     width = 12,
     title = "Convergence check",
-    span(
-      class = "text-muted",
+    p(
       "This box displays the moving average of a variable of your choice in a plot and table. By default, the moving average is displayed in blocks of 500 iterations.",
       br(),
       "You can also plot the relative difference in mean between the blocks by typing a number between 0 and 1 in the", strong(em("Relative change threshold")), " input field.",
       br(),
-      "These outcomes can also be calculated based on the variance by ticking the box.",
+      "These outcomes can also be calculated using the variance of the variable by ticking the box.",
       br()
       ),
     collapsed = TRUE,
