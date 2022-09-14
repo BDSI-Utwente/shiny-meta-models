@@ -4,7 +4,12 @@ survivalUI <- tabItem(
   box(
     width = 12,
     title = "Survival analysis check",
-    p("This tab allows to check whether survival models cross each other. In this tab, PACBOARD identify whether the first survival curve is higher than the second at different point in time."),
+    p("This box allows to check whether survival models cross each other.",
+      br(),
+      "In this box, PACBOARD identify whether the first survival curve is higher than the second at different point in time.",
+      br(),
+      strong("The results of this check are provided at the bottom of this box in text.")
+      ),
     hr(),
     fluidRow(
       column(
@@ -316,7 +321,7 @@ survivalUI <- tabItem(
     width = 12,
     title = "Survival analysis plot",
     collapsed = TRUE,
-    p("This tab allows you to plot the survival model for a specific iteration, using the above-selected inputs."),
+    p("This box allows you to plot the survival models for a specific iteration, using the above-selected inputs."),
     fluidRow(
       column(
         width = 4,
