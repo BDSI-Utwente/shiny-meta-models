@@ -6,7 +6,7 @@ survivalUI <- tabItem(
     title = "Survival analysis check",
     p("This box allows to check whether survival models cross each other.",
       br(),
-      "In this box, PACBOARD identify whether the first survival curve is higher than the second at different point in time.",
+      "In this box, PACBOARD identifies whether the first survival curve is higher than the second at several points in time.",
       br(),
       strong("The results of this check are provided at the bottom of this box in text.")
       ),
