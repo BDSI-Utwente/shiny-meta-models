@@ -1,9 +1,20 @@
 # UI ----------------------------------------------------------------------
 relationsUI <- tabItem(
   "relations",
-  ## Linear fit ----
+  ## Linear regression metamodel ----
   box(
-    title = "Linear fit",
+    title = "Linear regression metamodel",
+    p(
+      "In this box, you can use the fields below to select the outcome variable for the linear regression metamodel, and which variables should be used as predictors of this outcome.",
+      br(),
+      "Additionally, you can transform some variables to improve the statistical fit.",
+      br(),
+      "The left side of the pane contains the estimated parameter values of the fitted metamodel as well as the information on the fit of the metamodel on the data.",
+      br(),
+      "The right side of the pane displays a random selection of predicted values for the outcome using the metamodel against values of one predictor included in the metamodel (can be changed using the selection field).",
+      br(),
+      strong("Please be patient when modifying any input of the metamodel, the calculations can take a while...")
+    ),
     width = 12,
     ### selectize/relations-lm-outcome-variable ----
     fluidRow(
@@ -166,11 +177,16 @@ relationsUI <- tabItem(
     title = "Deterministic Sensitivity Analysis",
     width = 12,
     collapsed = TRUE,
+    p(
+      "This box contains a tornado diagram obtained by performing a deterministic one-way sensitivity analysis using the metamodel.",
+      br(),
+      "The right side of the box contains the prediction interval for the lower and higher bound value of the variable."
+    ),
     conditionalPanel(
       "input['relations-lm-outcome-variable'] != '' && input['relations-lm-predictor-variables'].length >= 2",
       fluidRow(column(6,
                       ### plotly/relations-dsa-plot ----
-                      plotlyOutput(
+                      plotOutput(
                         "relations-dsa-plot"
                       )),
                column(
@@ -469,7 +485,7 @@ relationsServer <- function(input, output, session, context) {
   })
   
   ### plotly/relations-dsa-plot ----
-  output$`relations-dsa-plot` <- renderPlotly({
+  output$`relations-dsa-plot` <- renderPlot({
     pacheck::plot_tornado(
       context$relations$dsa(),
       context$model$data_filtered() %>% as.data.frame(),
