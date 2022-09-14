@@ -56,9 +56,9 @@ dataUI <- tabItem(
     title = "Categorize input variables",
     width = 12,
     p(
-      class = "text-muted",
       "Please indicate which variables are costs, (dis)utility, probability, or relative effectiveness inputs for further analysis"
     ),
+    br(),
     selectizeInput(
       "cost-variables",
       "Costs",
@@ -90,19 +90,17 @@ dataUI <- tabItem(
       multiple = TRUE
     ),
     p(
-      class = "text-muted",
       "If there are multiple scenarios, please select the variable that identifies the scenario."
-    ),
+      ),
     selectizeInput("scenario-variable", "Scenario", choices = c("loading..."))
-  ),
+    ),
   
   ## outcome vars ----
   box(
     title = "Select outcome variables",
     width = 12,
-    span(
-      class = "text-muted",
-      "Please select variables representing total and incremental costs and effects for both the comparator and intervention conditions."
+    p(
+      "Please select variables representing total costs and effects for both the comparator and intervention conditions."
     ),
     # fluidRow(
     #   column(
@@ -234,10 +232,12 @@ dataUI <- tabItem(
   box(
     title = "Calculate incrementals and net benefits",
     width = 12,
-    span(
-      class = "text-muted",
+    p(
       "Using the buttons below, you can calculate the incremental QALYs and costs, and the (incremental) net benefits at the willingness-to-pay of your choice if these outcomes are not already available in your dataset."
       ),
+    p(
+      "Please wait for the calculations to be performed after clicking a button."
+    ),
     numericInput("wtp_data", 
                  "Choose your willingness to pay",
                  value = 50000,
@@ -256,11 +256,10 @@ dataUI <- tabItem(
     
   ## ui/summary-quick-checks ----
   box(
-    title = "Quick checks",
+    title = "Quick validation checks",
     width = 12,
     collapsed = TRUE,
-    span(
-      class = "text-muted",
+    p(
       "This box shows the results of quick checks which are automatically performed once you have defined the different types of inputs and outputs in your dataset."
     ),
     uiOutput("summary-quick-checks")
@@ -271,8 +270,7 @@ dataUI <- tabItem(
     title = "Data Preview",
     width = 12,
     collapsed = TRUE,
-    span(
-      class = "text-muted",
+    p(
       "This box shows the uploaded dataset."
     ),
     div(style = "overflow: auto;",
