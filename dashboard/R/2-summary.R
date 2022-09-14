@@ -17,11 +17,10 @@ summaryUI <- tabItem(
   box(
     width = 12,
     title = "Select variables for summary statistics",
-    span(
-      class = "text-muted",
+    p(
       "Using the input field below, you can select the input and output variables which you want to include in the", em("Summary statistics"), "-box (e.g. min, max, mean,...) below and which should be included in the correlation matrix(", em("Correlation matrix"), "-box).", 
       br(),
-      "You can also use the buttons to select an entire group of parameter (defined in the", strong("Prepare data-tab"), ")",
+      "You can also use the buttons to select an entire group of parameter (defined in the", strong("Prepare data-tab"), ").",
     ),
     ## selectizeInput/summary-statistics-variables ----
     selectizeInput(
@@ -60,8 +59,7 @@ summaryUI <- tabItem(
     width = 12,
     title = "Summary statistics",
     collapsed = TRUE,
-    span(
-      class = "text-muted",
+    p(
       "This box shows the summary statistics of the variables selected above."
     ),
     div(
@@ -74,8 +72,7 @@ summaryUI <- tabItem(
     width = 12,
     title = "Correlation matrix",
     collapsed = TRUE,
-    span(
-      class = "text-muted",
+    p(
       "This box shows the correlation between the variables selected above."
     ),
     div(
@@ -90,11 +87,14 @@ summaryUI <- tabItem(
   ## plotly/summary-distribution-plot ----
   box(
     width = 12,
-    title = "Univariate distributions",
+    title = "Single variable exploration",
     collapsed = TRUE,
-    span(
-      class = "text-muted",
-      "In this box, you can investigate the distribution of a single variable. You can also fit different statisticall distribution to the data."
+    p(
+      "In this box, you can investigate the distribution of a single variable.",
+      br(),
+      "You can also fit different statistical distributions to values of the variable.",
+      br(),
+      "Please wait for the calculations to be performed after selecting a (or multiple) distribution(s)"
     ),
     ### selectizeInput/summary-distribution-variable ----
     selectizeInput(
@@ -108,6 +108,7 @@ summaryUI <- tabItem(
       fluidRow(
         column(
           width = 6,
+          p("Select a distribution type and then fill in the parameter values of this distribution."),
           ### radioButtons/summary-distribution-type ----
           radioButtons(
             "summary-distribution-type",
@@ -122,9 +123,10 @@ summaryUI <- tabItem(
           ### checkboxGroup/summary-distribution-fits ----
           checkboxGroupInput(
             "summary-distribution-fits",
-            "Fit to...",
+            "Fit a ... distribution",
+            label = c("normal", "beta", "gamma", "log-normal", "custom"),
             choices = c(FIT_DISTRIBUTIONS, "custom"),
-            selected = c(FIT_DISTRIBUTIONS),
+            selected = NULL,
             inline = TRUE
           )
         )
@@ -184,13 +186,12 @@ summaryUI <- tabItem(
       )
   ),
   
-  ## Bivariate distribution ----
+  ## Two variables exploration ----
   box(
     width = 12,
-    title = "Bivariate distributions",
+    title = "Two variables exploration",
     collapsed = TRUE,
-    span(
-      class = "text-muted",
+    p(
       "In this box, you can draw a scatterplot of two variables and check whether the first is greater than the second.", 
       br(),
       "You can also fit a regression line through the scatterplot to investigate a potential relation between these two variables."
@@ -273,9 +274,8 @@ summaryUI <- tabItem(
     width = 12,
     title = "Check sum of probabilities",
     collapsed = TRUE,
-    span(
-      class = "text-muted",
-      "In this box, you can sum up multiple probability variables to check whether they remain lower than or are equal to 1."
+    p(
+      "In this box, you can sum up multiple variables containing probability input values to check whether they remain lower than or are equal to 1."
     ),
     fluidRow(column(
       6,
