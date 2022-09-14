@@ -358,7 +358,7 @@ relationsServer <- function(input, output, session, context) {
         partition_input <- 1
       } else {
         partition_input <- l_lm_input$partition()
-        } # to prevent crashing because partition is NA
+        } # to prevent crashing because partition is NA -> to fix, does not work as expected (tick the box for change, not automatic!)
       l_out <- pacheck::fit_lm_metamodel(
         df = context$model$data_filtered() %>% as.data.frame(),
         y_var  = context$relations$outcome_variable,
