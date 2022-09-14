@@ -352,8 +352,13 @@ relationsServer <- function(input, output, session, context) {
         ((l_lm_input$validation() == TRUE && 
           l_lm_input$partition() < 1 &&
           l_lm_input$partition() > 0) | 
-         l_lm_input$validation() == FALSE)
+         l_lm_input$validation() == FALSE) 
         ) {
+      if(is.na(l_lm_input$partition())) {
+        partition_input <- 1
+      } else {
+        partition_input <- l_lm_input$partition()
+        } # to prevent crashing because partition is NA
       l_out <- pacheck::fit_lm_metamodel(
         df = context$model$data_filtered() %>% as.data.frame(),
         y_var  = context$relations$outcome_variable,
@@ -363,7 +368,7 @@ relationsServer <- function(input, output, session, context) {
         x_exp = context$relations$predictor_variables_exponential,
         x_log = context$relations$predictor_variables_log,
         validation = l_lm_input$validation(),
-        partition  = l_lm_input$partition()
+        partition  = partition_input
         )
       return(l_out)
     }
