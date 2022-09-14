@@ -3,12 +3,17 @@ predictionsUI <- tabItem(
   "predictions",
   box(
     width = 12,
-    title = "Meta-model predictions",
+    title = "Metamodel input values for predictions",
+    p(
+      "In this box, you can modify the input values of the metamodel in order to obtain predictions of the outcome using the metamodel.",
+      br(),
+      "Default values are the mean of the original parameter value."
+    ),
     uiOutput("prediction-inputs")
   ),
   box(
     width = 12,
-    title = "Predicted outcomes",
+    title = "Predicted outcomes using the metamodel",
     collapsed = TRUE,
     conditionalPanel(
       "output['prediction-count'] >= 1",
@@ -19,7 +24,7 @@ predictionsUI <- tabItem(
       bs4Callout(
         title = "Make predictions",
         status = "info",
-        "After you have fit a model in the 'Relations' tab and requested one or more predictions, predicted outcomes will be shown here."
+        "After you have fit a model in the 'Metamodelling'-tab and requested one or more predictions, predicted outcomes will be shown here."
       )
     )
   )
@@ -88,9 +93,9 @@ predictionsServer <- function(input, output, session, context) {
   }) %>% bindEvent(input$`predictions-make-prediction`)
   
   predictions <- reactive({
-    if (!is.null(context$relations$lm()) &&
+    if (!is.null(context$relations$lm()$fit) &&
         nrow(context$predictions$predictor_values) >= 1) {
-      predict(context$relations$lm(),
+      predict(context$relations$lm()$fit,
               context$predictions$predictor_values,
               interval = "prediction")
     }
@@ -99,7 +104,7 @@ predictionsServer <- function(input, output, session, context) {
   ## OUTPUTS ----
   ### ui/prediction-inputs ----
   output$`prediction-inputs` <- renderUI({
-    if (!is.null(context$relations$lm())) {
+    if (!is.null(context$relations$lm()$fit)) {
       list(
         fluidRow(
           id = "predictions-predictor-values",
