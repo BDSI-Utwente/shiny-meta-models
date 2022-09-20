@@ -327,7 +327,7 @@ survivalUI <- tabItem(
         width = 4,
         numericInput(
           "survival-plot-iteration",
-          "Interation to plot",
+          "Iteration to plot",
           min = 0,
           max = Inf,
           value = 0)
