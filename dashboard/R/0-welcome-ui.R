@@ -23,6 +23,7 @@ welcomeUI <- tabItem(
       "5. The", strong("Metamodel predictions-tab"), ": use the metamodel you have fitted in the", em(strong("Metamodelling-tab")),  "to make predictions.",
       br(),
       "6. The", strong("Survival analysis-tab"), ": investigate whether two parametric survival models are crossing each other in any iteration based on parameters of the survival curves. Plot the survival models from specific iterations."),
-    p("In case you are only curious, you can use the pre-loaded data, by clicking the 'Use test data' button on top of the screen.")
+    p("In case you are only curious, you can use the pre-loaded data, by clicking the 'Use test data' button on top of the screen."),
+    p("This software is realease under the", a(href="https://www.gnu.org/licenses/gpl-3.0.en.html", "GNU GLP v3 license."))
   )
 )
