@@ -236,6 +236,15 @@ dataUI <- tabItem(
       "Using the buttons below, you can calculate the incremental QALYs and costs, and the (incremental) net benefits at the willingness-to-pay of your choice if these outcomes are not already available in your dataset."
       ),
     p(
+      "If you choose to calculate the incremental QALYs and costs, these will be calculated using the variables your have selected above under 'Total discounted QALYs' and 'Total discounted costs' for the intervention and the comparator. The calculation will add two columns to the uploaded dataset, the incremental QALYs ('incremental_qaly') and the incremental costs ('incremental_cost')."
+    ), 
+    p(
+      "If you choose to calculate the net benefits, five columns will be added to the loaded data: the net health & monetary benefits of the intervention ('NHB_int' and 'NMB_int'), the net health & monetary benefits of the comparator ('NHB_comp' and 'NMB_comp'), and the incremental net health an monetary benefits of the intervention versus the comparator ('iNHB' and 'iNMB')."
+    ),
+    p(
+      "If you choose to calculate both incremental QALYs and costs and net benefits, all seven columns will be added to the uploaded dataset."
+    ),
+    p(
       "Please wait for the calculations to be performed after clicking a button."
     ),
     numericInput("wtp_data", 
