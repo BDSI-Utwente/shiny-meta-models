@@ -18,7 +18,7 @@ summaryUI <- tabItem(
     width = 12,
     title = "Select variables for summary statistics",
     p(
-      "Using the input field below, you can select the input and output variables which you want to include in the", em("Summary statistics"), "-box (e.g. min, max, mean,...) below and which should be included in the correlation matrix(", em("Correlation matrix"), "-box).", 
+      "Using the input field below, you can select the input and output variables which you want to include in the", em("Summary statistics"), "-box (e.g. min, max, mean,...) below and which should be included in the correlation matrix (", em("Correlation matrix"), "-box).", 
       br(),
       "You can also use the buttons to select an entire group of parameter (defined in the", strong("Prepare data-tab"), ").",
     ),
@@ -179,6 +179,14 @@ summaryUI <- tabItem(
                ### dataTable/summary-distribution-stats ----
                column(
                  width = 6,
+                 p(
+                   br(),
+                   "The returned parameters ('Param 1' and 'Param 2') for each type of distributions are respectively the mean and standard deviation (normal),
+                   shape 1 and shape 2 (beta),
+                   shape and rate (gamma),
+                   meanlog and sdlog (log-normal),
+                   as obtained by `fitdistrplus::fitdist()`"
+                   ),
                  tableOutput("summary-distribution-fit"),
                  #verbatimTextOutput("brush-info")
                )
