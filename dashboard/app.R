@@ -1,5 +1,6 @@
 library(shiny)
 library(tidyverse)
+library(bs4Dash)
 
 options(
   shiny.autoreload = TRUE,
@@ -89,26 +90,26 @@ server <- function(input, output, session) {
     context$model$file$initialized <- TRUE
     
     # set variables
-    context$model$cost_variables <-
-      context$model$data %>% dplyr::select(starts_with("c_")) %>% names()
-    updateSelectizeInput(session,
-                         "cost-variables",
-                         selected = context$model$cost_variables)
-    
-    context$model$utility_variables <-
-      context$model$data %>% dplyr::select(starts_with("u_")) %>% names()
-    updateSelectizeInput(session,
-                         "utility-variables",
-                         selected = context$model$utility_variables)
-    
-    context$model$probability_variables <-
-      context$model$data %>% dplyr::select(starts_with("p_")) %>% names()
-    updateSelectizeInput(session,
-                         "probability-variables",
-                         selected = context$probability_variables)
-    
-    context$relations$outcome_variable <- "inc_qaly"
-    context$relations$predictor_variables <- c(context$model$utility_variables, context$model$probability_variables) %>% setdiff(c("u_d", "p_dd"))
+    # context$model$cost_variables <-
+    #   context$model$data %>% dplyr::select(starts_with("c_")) %>% names()
+    # updateSelectizeInput(session,
+    #                      "cost-variables",
+    #                      selected = context$model$cost_variables)
+    # 
+    # context$model$utility_variables <-
+    #   context$model$data %>% dplyr::select(starts_with("u_")) %>% names()
+    # updateSelectizeInput(session,
+    #                      "utility-variables",
+    #                      selected = context$model$utility_variables)
+    # 
+    # context$model$probability_variables <-
+    #   context$model$data %>% dplyr::select(starts_with("p_")) %>% names()
+    # updateSelectizeInput(session,
+    #                      "probability-variables",
+    #                      selected = context$probability_variables)
+    # 
+    # context$relations$outcome_variable <- "inc_qaly"
+    # context$relations$predictor_variables <- c(context$model$utility_variables, context$model$probability_variables) %>% setdiff(c("u_d", "p_dd"))
     
     shiny::removeUI("#test-data-loading .loading")
     shiny::insertUI("#test-data-loading", ui = icon("check", style="color: green;", class="ml-2"), immediate = FALSE)
