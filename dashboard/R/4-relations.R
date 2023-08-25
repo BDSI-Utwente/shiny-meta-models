@@ -87,8 +87,8 @@ relationsUI <- tabItem(
           "relations-lm-validation",
           "Should validation of the metamodel be performed?",
           value = FALSE
-          )
-        ),
+        )
+      ),
       ### numericInput/relation-lm-validation ----
       column(
         width = 4,
@@ -99,9 +99,9 @@ relationsUI <- tabItem(
           max = 1,
           step = 0.01,
           value = 1
-          )
         )
-      ),
+      )
+    ),
     conditionalPanel(
       "input['relations-lm-outcome-variable'] != '' && 
       (input['relations-lm-predictor-variables'].length >= 1 ||
@@ -162,16 +162,16 @@ relationsUI <- tabItem(
       )
     ),fluidRow(
       p("This panel shows the calibration statistics in the validation set (R-squared, mean absolute error, and mean relative error) and the calibration plot in the validation set."),
-        column(
-          width = 6,
-          dataTableOutput("relations-metamodel-validation-table")
-          ),
-        column(
-          width = 6,
-          plotOutput("relations-metamodel-validation-plot")
-          )
-        )
-      ),# dan conditionele dat er wel een model gefit is, anders warning message
+      column(
+        width = 6,
+        dataTableOutput("relations-metamodel-validation-table")
+      ),
+      column(
+        width = 6,
+        plotOutput("relations-metamodel-validation-plot")
+      )
+    )
+  ),# dan conditionele dat er wel een model gefit is, anders warning message
   ## DSA ----
   box(
     title = "Deterministic Sensitivity Analysis",
@@ -220,7 +220,7 @@ relationsServer <- function(input, output, session, context) {
       context$relations$predictor_variables_poly_3,
       context$relations$predictor_variables_exponential,
       context$relations$predictor_variables_log)
-  }) %>% debounce(1000)
+  }) %>% debounce(250)
   
   ## update selectize choices ----
   updateModelChoices <- observe({
@@ -272,7 +272,7 @@ relationsServer <- function(input, output, session, context) {
       selected = input$`relations-lm-plot-predictor-variable-poly-2`
     )
   }) %>% bindEvent(context$relations$predictor_variables_poly_2)
-
+  
   updatePredictorChoicesPoly3 <- observe({
     updateSelectizeInput(
       session,
@@ -281,7 +281,7 @@ relationsServer <- function(input, output, session, context) {
       selected = input$`relations-lm-plot-predictor-variable-poly-3`
     )
   }) %>% bindEvent(context$relations$predictor_variables_poly_3)
-
+  
   updatePredictorChoicesExponential <- observe({
     updateSelectizeInput(
       session,
@@ -290,7 +290,7 @@ relationsServer <- function(input, output, session, context) {
       selected = input$`relations-lm-plot-predictor-variable-exponential`
     )
   }) %>% bindEvent(context$relations$predictor_variables_exponential)
-
+  
   updatePredictorChoicesLog <- observe({
     updateSelectizeInput(
       session,
@@ -299,7 +299,7 @@ relationsServer <- function(input, output, session, context) {
       selected = input$`relations-lm-plot-predictor-variable-log`
     )
   }) %>% bindEvent(context$relations$predictor_variables_log)
-
+  
   ## update context ----
   updateOutcomeVariable <- observe({
     context$relations$outcome_variable <- input$`relations-lm-outcome-variable`
@@ -338,7 +338,7 @@ relationsServer <- function(input, output, session, context) {
       input$`relations-lm-partition`
     }) %>% 
       debounce(500)
-    )
+  )
   
   ## update model data ----
   context$relations$lm <- reactive({
@@ -353,12 +353,12 @@ relationsServer <- function(input, output, session, context) {
           l_lm_input$partition() < 1 &&
           l_lm_input$partition() > 0) | 
          l_lm_input$validation() == FALSE) 
-        ) {
+    ) {
       if(is.na(l_lm_input$partition())) {
         partition_input <- 1
       } else {
         partition_input <- l_lm_input$partition()
-        } # to prevent crashing because partition is NA -> to fix, does not work as expected (tick the box for change, not automatic!)
+      } # to prevent crashing because partition is NA -> to fix, does not work as expected (tick the box for change, not automatic!)
       l_out <- pacheck::fit_lm_metamodel(
         df = context$model$data_filtered() %>% as.data.frame(),
         y_var  = context$relations$outcome_variable,
@@ -369,10 +369,10 @@ relationsServer <- function(input, output, session, context) {
         x_log = context$relations$predictor_variables_log,
         validation = l_lm_input$validation(),
         partition  = partition_input
-        )
+      )
       return(l_out)
     }
-  }) %>% debounce(1000)
+  }) %>% debounce(350)
   
   context$relations$margins <- reactiveVal()
   
@@ -433,7 +433,7 @@ relationsServer <- function(input, output, session, context) {
         pred_data[[var]] <-
           margins[[var]] <- mean(data[[var]], na.rm = TRUE)
       }
-
+      
       context$relations$margins(margins)
       
       predictions <- predict(context$relations$lm()$fit,
@@ -505,15 +505,15 @@ relationsServer <- function(input, output, session, context) {
     if(l_lm_input$validation() == TRUE &&
        l_lm_input$partition() > 0 &&
        l_lm_input$partition() < 1){
-    context$relations$lm()$stats_validation
+      context$relations$lm()$stats_validation
     }
-    ) %>% bindEvent(context$relations$lm())
-
+  ) %>% bindEvent(context$relations$lm())
+  
   output$`relations-metamodel-validation-plot` <- renderPlot(
     if(l_lm_input$validation() == TRUE &&
        l_lm_input$partition() > 0 &&
        l_lm_input$partition() < 1){
-    context$relations$lm()$calibration_plot
+      context$relations$lm()$calibration_plot
     }
-    ) %>% bindEvent(context$relations$lm())
+  ) %>% bindEvent(context$relations$lm())
 }
