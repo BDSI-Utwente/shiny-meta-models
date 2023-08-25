@@ -55,7 +55,7 @@ outcomesUI <- tabItem(
       ),
       fluidRow(column(width = 9,
                       ### plotly/ice_plane ----
-                      plotOutput("ice_plane")),
+                      plotlyOutput("ice_plane")),
                column(width = 3,
                       ### table/ice_summary ----
                       tableOutput("ice_summary")))
@@ -661,7 +661,7 @@ outcomesServer <- function(input, output, session, context) {
   
   ## OUTPUTS ----
   ### plotly/ice_plane ----
-  output$ice_plane <- renderPlot({
+  output$ice_plane <- renderPlotly({
     if (context$outcomes$intervention_total_discounted_qalys != "" &&
         context$outcomes$intervention_total_discounted_costs != "" &&
         context$outcomes$comparator_total_discounted_qalys != "" &&
