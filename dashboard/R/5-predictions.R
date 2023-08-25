@@ -49,7 +49,11 @@ predictionsServer <- function(input, output, session, context) {
     
     cat("updating dynamic observers\n")
     context$predictions$observers <-
-      context$relations$predictor_variables %>% map(function(predictor) {
+      cbind(context$relations$predictor_variables,
+            context$relations$predictor_variables_poly_2,
+            context$relations$predictor_variables_poly_3,
+            context$relations$predictor_variables_exponential,
+            context$relations$predictor_variables_log) %>% map(function(predictor) {
         button_id <- paste0("predictor-reset-", predictor)
         value_id <- paste0("predictor-value-", predictor)
         mean <-
@@ -81,7 +85,11 @@ predictionsServer <- function(input, output, session, context) {
         }) %>% bindEvent(input[[value_id]])
         list(onReset, onChange)
       })
-  }) %>% bindEvent(context$relations$predictor_variables)
+  }) %>% bindEvent(context$relations$predictor_variables,
+                   context$relations$predictor_variables_poly_2,
+                   context$relations$predictor_variables_poly_3,
+                   context$relations$predictor_variables_exponential,
+                   context$relations$predictor_variables_log)
   
   ## NORMAL OBSERVERS
   makePrediction <- observe({
@@ -108,7 +116,11 @@ predictionsServer <- function(input, output, session, context) {
       list(
         fluidRow(
           id = "predictions-predictor-values",
-          context$relations$predictor_variables %>% map(
+          cbind(context$relations$predictor_variables,
+                context$relations$predictor_variables_poly_2,
+                context$relations$predictor_variables_poly_3,
+                context$relations$predictor_variables_exponential,
+                context$relations$predictor_variables_log) %>% map(
             create_predictor_input,
             values = context$predictions$current_predictor_values,
             data = context$model$data_filtered(),
@@ -125,10 +137,14 @@ predictionsServer <- function(input, output, session, context) {
       bs4Callout(
         title = "Fit a model",
         status = "info",
-        "You can only make predictions after fitting a model in the 'Relations' tab."
+        "You can only make predictions after fitting a model in the 'Metamodelling' tab."
       )
     }
   }) %>% bindEvent(context$relations$predictor_variables,
+                   context$relations$predictor_variables_poly_2,
+                   context$relations$predictor_variables_poly_3,
+                   context$relations$predictor_variables_exponential,
+                   context$relations$predictor_variables_log,
                    context$predictions$warnings)
   
   ### dataTable/predictor-values ----
