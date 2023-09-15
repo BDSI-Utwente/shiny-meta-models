@@ -1,6 +1,6 @@
 # UI ----------------------------------------------------------------------
 relationsUI <- tabItem(
-  "relations",
+  "metamodel",
   ## Linear regression metamodel ----
   box(
     title = "Linear regression metamodel",
@@ -31,7 +31,7 @@ relationsUI <- tabItem(
         width = 4,
         selectizeInput(
           "relations-lm-predictor-variables",
-          "Predictors",
+          "Predictors not to transform",
           choices = c("No data loaded..." = ""),
           multiple = TRUE
           )
@@ -102,13 +102,15 @@ relationsUI <- tabItem(
         )
       )
     ),
+    fluidRow(
+      actionButton(
+        "relations-fit-metamodel",
+        "Fit metamodel",
+        status = "primary"
+      )
+    ),
     conditionalPanel(
-      "input['relations-lm-outcome-variable'] != '' && 
-      (input['relations-lm-predictor-variables'].length >= 1 ||
-      input['relations-lm-predictor-variables-poly-2'].length >= 1 ||
-      input['relations-lm-predictor-variables-poly-3'].length >= 1 ||
-      input['relations-lm-predictor-variables-exponential'].length >= 1 ||
-      input['relations-lm-predictor-variables-log'].length >= 1)",
+      "input['relations-fit-metamodel'] == 1",
       fluidRow(
         column(6,
                # TODO: Add some styling to raw text outputs?
@@ -119,7 +121,7 @@ relationsUI <- tabItem(
           ### plotly/relations-lm-plot ----
           plotlyOutput("relations-lm-plot"),
           conditionalPanel(
-            "input['relations-lm-predictor-variables'].length > 1",
+            "input['relations-fit-metamodel'] == 1",
             #### selectize/relations-lm-plot-predictor-variable ----
             selectizeInput(
               "relations-lm-plot-predictor-variable",
@@ -133,12 +135,7 @@ relationsUI <- tabItem(
       )
     ),
     conditionalPanel(
-      "input['relations-lm-outcome-variable'] == '' || 
-      (input['relations-lm-predictor-variables'].length == 0 &&
-      input['relations-lm-predictor-variables-poly-2'].length == 0 &&
-      input['relations-lm-predictor-variables-poly-3'].length == 0 &&
-      input['relations-lm-predictor-variables-exponential'].length == 0 &&
-      input['relations-lm-predictor-variables-log'].length == 0)",
+      "input['relations-fit-metamodel'] == 0",
       bs4Dash::bs4Callout(
         "You must select an 'Outcome variable' and predictors to see the value of the predictors of the fitted linear metamodel.",
         title = "Select outcome and predictor variables",
@@ -220,7 +217,7 @@ relationsServer <- function(input, output, session, context) {
       context$relations$predictor_variables_poly_3,
       context$relations$predictor_variables_exponential,
       context$relations$predictor_variables_log)
-  }) %>% debounce(250)
+  }) %>% debounce(50)
   
   ## update selectize choices ----
   updateModelChoices <- observe({
@@ -333,13 +330,13 @@ relationsServer <- function(input, output, session, context) {
     validation = reactive({
       input$`relations-lm-validation`
     }) %>% 
-      debounce(500),
+      debounce(50),
     partition = reactive({
       input$`relations-lm-partition`
     }) %>% 
-      debounce(500)
+      debounce(50)
   )
-  
+
   ## update model data ----
   context$relations$lm <- reactive({
     if (context$relations$outcome_variable %in% names(context$model$data_filtered()) &&
@@ -359,7 +356,8 @@ relationsServer <- function(input, output, session, context) {
       } else {
         partition_input <- l_lm_input$partition()
       } # to prevent crashing because partition is NA -> to fix, does not work as expected (tick the box for change, not automatic!)
-      l_out <- pacheck::fit_lm_metamodel(
+      isolate({
+        l_out <- pacheck::fit_lm_metamodel(
         df = context$model$data_filtered() %>% as.data.frame(),
         y_var  = context$relations$outcome_variable,
         x_vars  = context$relations$predictor_variables,
@@ -370,9 +368,12 @@ relationsServer <- function(input, output, session, context) {
         validation = l_lm_input$validation(),
         partition  = partition_input
       )
+      
+      })
       return(l_out)
-    }
-  }) %>% debounce(350)
+      }
+
+  }) %>% bindEvent(input$`relations-fit-metamodel`)
   
   context$relations$margins <- reactiveVal()
   
@@ -459,12 +460,7 @@ relationsServer <- function(input, output, session, context) {
           shape = 16
         )
     }
-  }) %>% bindEvent(context$relations$lm(),
-                   input$`relations-lm-plot-predictor-variable`,
-                   input$`relations-lm-plot-predictor-variable-poly-2`,
-                   input$`relations-lm-plot-predictor-variable-poly-3`,
-                   input$`relations-lm-plot-predictor-variable-exponential`,
-                   input$`relations-lm-plot-predictor-variable-log`)
+  }) %>% bindEvent(context$relations$lm())
   
   ### print/relations-lm-margins ----
   output$`relations-lm-margins` <- renderPrint({
