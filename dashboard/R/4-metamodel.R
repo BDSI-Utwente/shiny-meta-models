@@ -110,7 +110,7 @@ relationsUI <- tabItem(
       )
     ),
     conditionalPanel(
-      "input['relations-fit-metamodel'] == 1",
+      "input['relations-fit-metamodel'] > 0",
       fluidRow(
         column(6,
                # TODO: Add some styling to raw text outputs?
@@ -121,7 +121,7 @@ relationsUI <- tabItem(
           ### plotly/relations-lm-plot ----
           plotlyOutput("relations-lm-plot"),
           conditionalPanel(
-            "input['relations-fit-metamodel'] == 1",
+            "input['relations-fit-metamodel'] > 0",
             #### selectize/relations-lm-plot-predictor-variable ----
             selectizeInput(
               "relations-lm-plot-predictor-variable",
@@ -245,14 +245,19 @@ relationsServer <- function(input, output, session, context) {
       
       # bind to model_variables() instead of outcome/predictors because we can
       # put a debounce on model_variables()
-      model_variables()
+      model_variables(),
+      input$`relations-fit-metamodel`
     )
   
   updatePredictorChoices <- observe({
     updateSelectizeInput(
       session,
       "relations-lm-plot-predictor-variable",
-      choices = context$relations$predictor_variables,
+      choices = c(context$relations$predictor_variables,
+                  context$relations$predictor_variables_poly_2,
+                  context$relations$predictor_variables_poly_3,
+                  context$relations$predictor_variables_exponential,
+                  context$relations$predictor_variables_log),
       selected = input$`relations-lm-plot-predictor-variable`
     )
   }) %>% bindEvent(context$relations$predictor_variables,
@@ -408,11 +413,11 @@ relationsServer <- function(input, output, session, context) {
       
       data <- context$model$data_filtered() %>%
         dplyr::select(!!!x_vars, 
-                      !!x_vars_poly_2, 
-                      !!x_vars_poly_3,
-                      !!x_vars_exponential,
-                      !!x_vars_log,
-                      !!y_var)
+                      !!!x_vars_poly_2, 
+                      !!!x_vars_poly_3,
+                      !!!x_vars_exponential,
+                      !!!x_vars_log,
+                      !!!y_var)
       
       # predict at 100 points across the range of x
       pred_data <- tibble(.rows = 100)
@@ -460,7 +465,8 @@ relationsServer <- function(input, output, session, context) {
           shape = 16
         )
     }
-  }) %>% bindEvent(context$relations$lm())
+  }) %>% bindEvent(context$relations$lm(),
+                   input$`relations-lm-plot-predictor-variable`)
   
   ### print/relations-lm-margins ----
   output$`relations-lm-margins` <- renderPrint({
