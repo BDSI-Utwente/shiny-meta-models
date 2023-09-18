@@ -49,11 +49,13 @@ predictionsServer <- function(input, output, session, context) {
     
     cat("updating dynamic observers\n")
     context$predictions$observers <-
-      cbind(context$relations$predictor_variables,
-            context$relations$predictor_variables_poly_2,
-            context$relations$predictor_variables_poly_3,
-            context$relations$predictor_variables_exponential,
-            context$relations$predictor_variables_log) %>% map(function(predictor) {
+      c(
+        context$relations$predictor_variables,
+        context$relations$predictor_variables_poly_2,
+        context$relations$predictor_variables_poly_3,
+        context$relations$predictor_variables_exponential,
+        context$relations$predictor_variables_log
+      ) %>% map(function(predictor) {
         button_id <- paste0("predictor-reset-", predictor)
         value_id <- paste0("predictor-value-", predictor)
         mean <-
@@ -99,9 +101,11 @@ predictionsServer <- function(input, output, session, context) {
   predictions <- reactive({
     if (!is.null(context$relations$lm()$fit) &&
         nrow(context$predictions$predictor_values) >= 1) {
-      predict(context$relations$lm()$fit,
-              context$predictions$predictor_values,
-              interval = "prediction")
+      predict(
+        context$relations$lm()$fit,
+        context$predictions$predictor_values,
+        interval = "prediction"
+      )
     }
   })
   
@@ -109,14 +113,17 @@ predictionsServer <- function(input, output, session, context) {
   ### ui/prediction-inputs ----
   output$`prediction-inputs` <- renderUI({
     if (!is.null(context$relations$lm()$fit)) {
+      
       list(
         fluidRow(
           id = "predictions-predictor-values",
-          cbind(context$relations$predictor_variables,
-                context$relations$predictor_variables_poly_2,
-                context$relations$predictor_variables_poly_3,
-                context$relations$predictor_variables_exponential,
-                context$relations$predictor_variables_log) %>% map(
+          c(
+            context$relations$predictor_variables,
+            context$relations$predictor_variables_poly_2,
+            context$relations$predictor_variables_poly_3,
+            context$relations$predictor_variables_exponential,
+            context$relations$predictor_variables_log
+          ) %>% map(
             create_predictor_input,
             values = context$predictions$current_predictor_values,
             data = context$model$data_filtered(),
