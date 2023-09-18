@@ -85,7 +85,7 @@ predictionsServer <- function(input, output, session, context) {
         }) %>% bindEvent(input[[value_id]])
         list(onReset, onChange)
       })
-  }) %>% bindEvent(input$`relations-fit-metamodel`)
+  }) %>% bindEvent(context$relations$lm())
   
   ## NORMAL OBSERVERS
   makePrediction <- observe({
@@ -136,7 +136,7 @@ predictionsServer <- function(input, output, session, context) {
         "You can only make predictions after fitting a model in the 'Metamodelling' tab."
       )
     }
-  }) %>% bindEvent(input$`relations-fit-metamodel`,
+  }) %>% bindEvent(context$relations$lm(),
                    context$predictions$warnings)
   
   ### dataTable/predictor-values ----
