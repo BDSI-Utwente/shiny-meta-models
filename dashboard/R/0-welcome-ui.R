@@ -23,10 +23,15 @@ welcomeUI <- tabItem(
       "5.", strong("Metamodel predictions"), ": use the metamodel you have fitted in the", em(strong("Metamodelling-tab")),  "to make predictions.",
       br(),
       "6.", strong("Survival analysis"), ": investigate whether two parametric survival models are crossing each other in any iteration based on parameters of the survival curves. Plot the survival models from specific iterations."),
-    p("In case you are only curious, you can use the pre-loaded data, by clicking the 'Use test data' button on top of the screen."),
+    p("In case you are only curious, you can use the pre-loaded probabilistic inputs and outputs, by clicking the 'Use test data' button on top of the screen."),
+    p("The descriptions of the", 
+      a(href = "https://xa4p.github.io/pacheck/articles/Appendix_A-HE_model_description.html", "health economic model"),  
+      "and the",  
+      a(href = "https://xa4p.github.io/pacheck/reference/df_pa.html", "preloaded probabilistic inputs and outputs"), 
+      "are available on the website of the `pacheck` package"),
     p("This software is realease under the", a(href="https://www.gnu.org/licenses/gpl-3.0.en.html", "GNU GLP v3 license.")),
     p("If you have any questions about PACBOARD or would like to contribute to its further development, please reach out at:",
-      a(href = "mailto: x.g.l.v.pouwels@utwente.nl"), "x.g.l.v.pouwels@utwente.nl"
+      a(href = "mailto: x.g.l.v.pouwels@utwente.nl", "x.g.l.v.pouwels@utwente.nl")
       )
   )
 )
