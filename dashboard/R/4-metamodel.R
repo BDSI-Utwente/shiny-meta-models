@@ -9,11 +9,12 @@ relationsUI <- tabItem(
       br(),
       "Additionally, you can transform some variables to improve the statistical fit.",
       br(),
+      "Once you have selected the variables you want to include in the metamodel, click the button 'Fit metamodel' to fit the metamodel.",
+      br(),
       "The left side of the pane contains the estimated parameter values of the fitted metamodel as well as the information on the fit of the metamodel on the data.",
       br(),
       "The right side of the pane displays a random selection of predicted values for the outcome using the metamodel against values of one predictor included in the metamodel (can be changed using the selection field).",
       br(),
-      strong("Please be patient when modifying any input of the metamodel, the calculations can take a while...")
     ),
     width = 12,
     ### selectize/relations-lm-outcome-variable ----
@@ -109,6 +110,7 @@ relationsUI <- tabItem(
         status = "primary"
       )
     ),
+    br(),
     conditionalPanel(
       "input['relations-fit-metamodel'] > 0",
       fluidRow(
@@ -159,40 +161,18 @@ relationsUI <- tabItem(
       )
     ),fluidRow(
       p("This panel shows the calibration statistics in the validation set (R-squared, mean absolute error, and mean relative error) and the calibration plot in the validation set."),
+      ### datatable/relations-metamodel-validation-table ----
       column(
         width = 6,
         dataTableOutput("relations-metamodel-validation-table")
       ),
+      ### plot/relations-metamodel-validation-plot ----
       column(
         width = 6,
-        plotOutput("relations-metamodel-validation-plot")
+        plotlyOutput("relations-metamodel-validation-plot")
       )
     )
-  ),# dan conditionele dat er wel een model gefit is, anders warning message
-  ## DSA ----
-  box(
-    title = "Deterministic Sensitivity Analysis",
-    width = 12,
-    collapsed = TRUE,
-    p(
-      "This box contains a tornado diagram obtained by performing a deterministic one-way sensitivity analysis using the metamodel.",
-      br(),
-      "The right side of the box contains the prediction interval for the lower and higher bound value of the variable."
-    ),
-    conditionalPanel(
-      "input['relations-lm-outcome-variable'] != '' && input['relations-lm-predictor-variables'].length >= 2",
-      fluidRow(column(6,
-                      ### plotly/relations-dsa-plot ----
-                      plotOutput(
-                        "relations-dsa-plot"
-                      )),
-               column(
-                 6,
-                 ### dataTable/relations-dsa-table ----
-                 dataTableOutput("relations-dsa-table")
-               ))
-    )
-  )
+  ) # conditional on having a fitted model, otherwise warning message
 )
 
 
@@ -476,33 +456,6 @@ relationsServer <- function(input, output, session, context) {
          ~ div(class = "tag", code(.y), "held at", round(.x, 2))) %>% div(class = "tag-list")
   }) %>% bindEvent(context$relations$margins())
   
-  context$relations$dsa <- reactive({
-    pacheck::dsa_lm_metamodel(context$model$data_filtered(), context$relations$lm()$fit)
-  }) %>% bindEvent(context$relations$lm())
-  
-  ### dataTable/relations-dsa-table ----
-  output$`relations-dsa-table` <- renderDataTable({
-    context$relations$dsa() %>%
-      mutate(across(where(is.numeric), round, digits = 3)) %>%
-      transmute(
-        Parameter,
-        `Lower Bound` = glue::glue("{Lower_Bound_low} – {Lower_Bound_upp}"),
-        `Upper Bound` = glue::glue("{Upper_Bound_low} – {Upper_Bound_upp}")
-      )
-  })
-  
-  ### plotly/relations-dsa-plot ----
-  output$`relations-dsa-plot` <- renderPlot({
-    pacheck::plot_tornado(
-      context$relations$dsa(),
-      context$model$data_filtered() %>% as.data.frame(),
-      context$relations$outcome_variable
-    )
-  }) %>%
-    # dsa takes a dependency on lm, which depends on data, inputs and output.
-    # therefore, we only need a dependency on dsa here.
-    bindEvent(context$relations$dsa())
-  
   output$`relations-metamodel-validation-table` <- renderDataTable(
     if(l_lm_input$validation() == TRUE &&
        l_lm_input$partition() > 0 &&
@@ -511,7 +464,7 @@ relationsServer <- function(input, output, session, context) {
     }
   ) %>% bindEvent(context$relations$lm())
   
-  output$`relations-metamodel-validation-plot` <- renderPlot(
+  output$`relations-metamodel-validation-plot` <- renderPlotly(
     if(l_lm_input$validation() == TRUE &&
        l_lm_input$partition() > 0 &&
        l_lm_input$partition() < 1){
