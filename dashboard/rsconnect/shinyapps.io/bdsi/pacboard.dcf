@@ -5,10 +5,8 @@ account: bdsi
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6073162
-bundleId: 6320375
+bundleId: 7732989
 url: https://bdsi.shinyapps.io/pacboard/
-when: 1663686760.89788
-lastSyncTime: 1663686760.89788
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: .lintr|.Rprofile|TODO.md
