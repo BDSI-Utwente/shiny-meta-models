@@ -6,7 +6,10 @@ survivalUI <- tabItem(
     title = "Survival analysis check",
     p("This box allows to check whether survival models cross each other.",
       br(),
-      "In this box, PACBOARD identifies whether the first survival curve is higher than the second at several points in time.",
+      "In this box, PACBOARD identifies whether the first survival curve is higher than the second at several points in time.", 
+      br(),
+      "The parameterisation of the survival curve follows the parameterisation of the",
+      a(href = "https://cran.r-project.org/web/packages/flexsurv/index.html", "`flexsurv` R package."),
       br(),
       strong("The results of this check are provided at the bottom of this box in text.")
       ),
