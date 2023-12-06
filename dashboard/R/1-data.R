@@ -20,7 +20,7 @@ dataUI <- tabItem(
       br(),
       strong("The first row of the dataset should contain the names of the inputs and outputs."),
       br(),
-      "If you would like your variables to be automatically categorised, please ensure that the name of the variable starts with:",
+      "If you would like your input variables to be automatically categorised, please ensure that the name of the variable starts with:",
       br(),
       "'c_' for costs inputs",
       br(),
@@ -30,7 +30,13 @@ dataUI <- tabItem(
       br(),
       "'disu_' for disutility values inputs",
       br(),
-      "'rr_', 'hr_', or 'or_' for relative effectiveness inputs"
+      "'rr_', 'hr_', or 'or_' for relative effectiveness inputs",
+      br(),
+      "If you would like your total QALYs and costs variables to be automatically categorised, please ensure that the name of the variable starts with:",
+      br(),
+      "'t_qaly_d' for the discounted QALYs of each strategy. The name of the strategy should be separated from 't_qaly_d' by a '_', e.g. 't_qaly_d_intervention'",
+      br(),
+      "'t_costs_d' for the discounted costs of each strategy. The name of the strategy should be separated from 't_costs_d' by a '_', e.g. 't_costs_d_intervention'"
       ),
     width = 12,
     fileInput("model_file",
@@ -117,6 +123,28 @@ dataUI <- tabItem(
     # fluidRow(
     #   column(
     #     6,
+    h4("All strategies"),
+    fluidRow(column(
+      6,
+      ### selectize/outcomes-all-total-discounted-qalys ----
+      selectizeInput(
+        "outcomes-all-total-discounted-qalys",
+        "Total discounted QALYs - all strategies",
+        choices = c("no data loaded..." = ""),
+        multiple = TRUE
+        )
+      ),
+      column(
+        6,
+        ### selectize/outcomes-all-total-discounted-costs ----
+        selectizeInput(
+          "outcomes-all-total-discounted-costs",
+          "Total discounted costs - all strategies",
+          choices = c("no data loaded..." = ""),
+          multiple = TRUE
+        )
+      )
+    ),
     h4("Intervention"),
     fluidRow(column(
       4,
@@ -318,7 +346,7 @@ dataServer <- function(input, output, session, context) {
   context$model$file <- reactiveValues(status = NULL,
                                        initialized = FALSE)
   
-  ### debounce rapidly changing inputs ----
+  # debounce rapidly changing inputs ----
   data_nb <- list(
     # only apply changes after 500ms without any change
     calculation = reactive({
@@ -515,6 +543,7 @@ dataServer <- function(input, output, session, context) {
   }) %>%
     bindEvent(input$model_file)
   
+  # update variables and fill in automatically upon upload ----
   updateModelVariables <- observe({
     context$model$variables <- names(context$model$data)
     
@@ -550,6 +579,20 @@ dataServer <- function(input, output, session, context) {
     updateSelectizeInput(session,
                          "relative-effectiveness-variables",
                          selected = context$relative_effectiveness_variables)
+    
+    context$outcomes$all_total_discounted_qalys <- 
+      context$model$data %>% dplyr::select(starts_with("t_qaly_d")) %>% names()
+    updateSelectizeInput(session,
+                         "outcomes-all-total-discounted-qalys",
+                         selected = context$outcomes$all_total_discounted_qalys)
+    
+    context$outcomes$all_total_discounted_costs <- 
+      context$model$data %>% dplyr::select(starts_with("t_costs_d")) %>% names()
+    updateSelectizeInput(session,
+                         "outcomes-all-total-discounted-costs",
+                         selected = context$outcomes$all_total_discounted_costs)
+    
+    
   }) %>% bindEvent(context$model$data)
   
   updateModelVariablesIncrementsNB <- observe({
@@ -617,7 +660,7 @@ dataServer <- function(input, output, session, context) {
     updateSelectizeInput(session, "scenario", choices = context$model$scenarios)
   }) %>% bindEvent(context$model$scenarios, ignoreNULL = FALSE)
   
-  ### ui/summary-quick-checks ----
+  # ui/summary-quick-checks ----
   output$`summary-quick-checks` <- renderUI({
     checks <- list()
     

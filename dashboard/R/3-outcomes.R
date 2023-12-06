@@ -1,6 +1,66 @@
 library(plotly)
 library(pacheck)
 
+# plot_ce_mult <- function (df,
+#                           outcomes,
+#                           costs,
+#                           ellipse = FALSE,
+#                           currency = "euro") {
+#   # Checks
+#   assertthat::assert_that(all(outcomes %in% names(df)), msg = glue::glue("At least one variable in vector 'outcomes' is not a valid column name of 'df'."))
+#   assertthat::assert_that(all(costs %in% names(df)), msg = glue::glue("At least one variable in vector 'costs' is not a valid column name of 'df'."))
+#   assertthat::assert_that(length(costs) == length(outcomes), msg = glue::glue("The length of vector of names 'outcomes' is different than length of vercor of names 'costs'."))
+#   if(!currency %in% c("none", "euro", "dollar", "yen")) {
+#     stop("The chosen currency is not valid.")
+#   }
+#   
+#   # Determine formatting plot
+#   cur <- switch(currency,
+#                 euro = "\u20ac ",
+#                 dollar = "\u0024 ",
+#                 yen = "\u00a5 ",
+#                 none = "")
+#   
+#   # Modify data for plot
+#   df_plot <- df |>
+#     dplyr::select(c(outcomes,
+#                     costs)) |>
+#     dplyr::rename_all( ~ gsub("t_qaly_d", "QALY", .)) |>
+#     dplyr::rename_all( ~ gsub("t_costs_d", "Costs", .)) |>
+#     dplyr::mutate(Iteration = 1:nrow(df)) |>
+#     tidyr::pivot_longer(!Iteration,
+#                         names_to = c("Outcome", "Strategy"),
+#                         names_sep = "_") |>
+#     tidyr::pivot_wider(
+#       names_from = Outcome ,
+#       values_from = value
+#     )
+#   df_plot_mean <- df_plot |>
+#     dplyr::group_by(Strategy) |>
+#     dplyr::summarise(QALY = mean(QALY),
+#                      Costs = mean(Costs))
+#   
+#   # Plot
+#   p_out <- ggplot2::ggplot(data = df_plot, ggplot2::aes(x = QALY, y = Costs, colour = Strategy)) +
+#     ggplot2::scale_y_continuous(labels = scales::dollar_format(prefix = cur, suffix = "")) +
+#     ggplot2::geom_hline(yintercept = 0) +
+#     ggplot2::geom_vline(xintercept = 0) +
+#     ggplot2::xlab ("Total effects") +
+#     ggplot2::ylab("Total costs") +
+#     ggplot2::theme_bw()
+#   
+#   if(ellipse == TRUE) {
+#     p_out <- p_out+
+#       ggplot2::stat_ellipse() +
+#       ggplot2::geom_point(data = df_plot_mean, ggplot2::aes(x = QALY, y = Costs, colour = Strategy))
+#   } else {
+#     p_out <- p_out+
+#       ggplot2::geom_point()
+#   }
+#   # Export
+#   p_out
+# }
+  
 # UI ----------------------------------------------------------------------
 outcomesUI <- tabItem(
   "outcomes",
@@ -95,8 +155,11 @@ outcomesUI <- tabItem(
           width = 12
         )
       )
-    )
-    )
+      # ,
+      # ## CE plane multi ----
+      # plotOutput("ce_plane_multi")
+      )
+      )
     ),
   ## NB plane ----
   box(
@@ -353,6 +416,22 @@ outcomesServer <- function(input, output, session, context) {
   
   ## UI update observers ----
   updateICEplaneVariableChoices <- observe({
+    ### selectizeInput/outcomes-all-total-discounted-qalys ----
+    updateSelectizeInput(
+      session,
+      "outcomes-all-total-discounted-qalys",
+      choices = context$model$variables,
+      selected = context$outcomes$all_total_discounted_qalys
+    )
+    
+    ### selectizeInput/outcomes-all-total-discounted-costs ----
+    updateSelectizeInput(
+      session,
+      "outcomes-all-total-discounted-costs",
+      choices = context$model$variables,
+      selected = context$outcomes$all_total_discounted_costs
+    )
+    
     ### selectizeInput/outcomes-intervention-total-discounted-qalys ----
     updateSelectizeInput(
       session,
@@ -476,6 +555,18 @@ outcomesServer <- function(input, output, session, context) {
   }) %>% bindEvent(context$model$variables)
   
   ## SERVER update observers ----
+  
+  ### context$outcomes$intervention_total_discounted_qalys ----
+  updateTotalDiscQALYAll <- observe({
+    context$outcomes$all_total_discounted_qalys <-
+      input$`outcomes-all-total-discounted-qalys`
+  }) %>% bindEvent(input$`outcomes-all-total-discounted-qalys`)
+  
+  ### context$outcomes$intervention_total_discounted_costs ----
+  updateTotalDiscCostsAll <- observe({
+    context$outcomes$all_total_discounted_costs <-
+      input$`outcomes-all-total-discounted-costs`
+  }) %>% bindEvent(input$`outcomes-all-total-discounted-costs`)
   
   ### context$outcomes$intervention_total_discounted_qalys ----
   updateTotalDiscQALYIntervention <- observe({
@@ -725,6 +816,18 @@ outcomesServer <- function(input, output, session, context) {
     }
   })
   
+  ### plotly/ce_plane multi ----
+  # output$ce_plane_multi <- renderPlot({
+  #   if (length(context$outcomes$all_total_discounted_qalys) > 0 &&
+  #       length(context$outcomes$all_total_discounted_costs) > 0) {
+  #     plot_ce_mult(
+  #       df = context$model$data_filtered() %>% as.data.frame(),
+  #       outcomes = context$outcomes$all_total_discounted_qalys,
+  #       costs = context$outcomes$all_total_discounted_costs,
+  #       ellipse = TRUE
+  #     )
+  #   }
+  # })
   
   ### plotly/nb_plot ----
   output$nb_plot <- renderPlot({
