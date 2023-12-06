@@ -1,0 +1,74 @@
+---
+title: "PACBOARD report"
+output: word_document
+params:
+  person: NA
+  df_pacboard: NULL
+  summary_stats: TRUE
+  corr_matrix: TRUE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+require(pacheck)
+require(dplyr)
+require(tidyr)
+require(ggplot2)
+```
+
+# Introduction
+This report has been generated on `r Sys.Date()``r ifelse(params$person != '', paste0(" by ", params$person, "."), ".")`  
+
+`r if(params$summary_stats == TRUE) {paste("# Summary uploaded data")}`
+```{r}
+if(is.data.frame(params$df_pacboard)) {
+  if(params$summary_stats == TRUE) {
+    knitr::kable(
+      as.data.frame(
+        pacheck::generate_sum_stats(params$df_pacboard)
+        )
+    )
+  }
+} else {
+    print("No data has been uploaded to PACBOARD")
+  }
+```
+
+`r if(params$corr_matrix == TRUE) {paste("# Correlation matrix")}`
+```{r}
+if(is.data.frame(params$df_pacboard)) {
+  if(params$corr_matrix == TRUE) {
+     invalid_cols_non_numeric <- params$df_pacboard %>%
+      dplyr::select(where( ~ !is.numeric(.x))) %>%
+      names()
+    
+    invalid_cols_no_variance <- params$df_pacboard %>%
+      dplyr::select(-any_of(invalid_cols_non_numeric)) %>%
+      dplyr::select(where( ~ var(.x, na.rm = TRUE) <= 1e-4)) %>%
+      names()
+    
+    valid_data <- params$df_pacboard %>%
+      dplyr::select(-any_of(invalid_cols_non_numeric),
+                    -any_of(invalid_cols_no_variance))
+    
+    correlations <- valid_data %>%
+      cor(use = "pair") %>%
+      as_tibble(rownames = "x") %>%
+      tidyr::pivot_longer(-x, names_to = "y", values_to = "cor") %>%
+      mutate(
+        x = factor(x, names(valid_data)),
+        y = factor(y, names(valid_data) %>% rev())
+      )
+    plot_cor <- correlations %>%
+      ggplot(aes(x, y, fill = cor)) +
+      geom_raster() +
+      scale_fill_continuous(limits = c(min(correlations$cor, 0), max(correlations$cor, 1))) +
+      theme(axis.text.x = element_text(angle = 45),
+            axis.title = element_blank())
+    plot_cor
+  }
+}
+```
+
+
+

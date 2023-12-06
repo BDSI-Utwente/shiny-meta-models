@@ -54,6 +54,11 @@ ui <- dashboardPage(
         "Survival analysis",
         tabName = "survival",
         icon = icon("chart-line")
+      ),
+      menuItem(
+        "Download report",
+        tabName = "report",
+        icon = icon("download")
       )
     )
   ),
@@ -65,7 +70,8 @@ ui <- dashboardPage(
       outcomesUI,
       relationsUI,
       predictionsUI,
-      survivalUI
+      survivalUI,
+      downloadUI
     )
   )
 )
@@ -78,6 +84,7 @@ server <- function(input, output, session) {
   relationsServer(input, output, session, context)
   predictionsServer(input, output, session, context)
   survivalServer(input, output, session, context)
+  downloadServer(input, output, session, context)
   
   ## test data binding ----
   observe({
@@ -90,24 +97,32 @@ server <- function(input, output, session) {
     context$model$file$initialized <- TRUE
     
     # set variables
-    # context$model$cost_variables <-
-    #   context$model$data %>% dplyr::select(starts_with("c_")) %>% names()
-    # updateSelectizeInput(session,
-    #                      "cost-variables",
-    #                      selected = context$model$cost_variables)
-    # 
-    # context$model$utility_variables <-
-    #   context$model$data %>% dplyr::select(starts_with("u_")) %>% names()
-    # updateSelectizeInput(session,
-    #                      "utility-variables",
-    #                      selected = context$model$utility_variables)
-    # 
-    # context$model$probability_variables <-
-    #   context$model$data %>% dplyr::select(starts_with("p_")) %>% names()
-    # updateSelectizeInput(session,
-    #                      "probability-variables",
-    #                      selected = context$probability_variables)
-    # 
+    context$model$cost_variables <-
+      context$model$data %>% dplyr::select(starts_with("c_")) %>% names()
+    updateSelectizeInput(session,
+                         "cost-variables",
+                         selected = context$model$cost_variables)
+    
+    context$model$utility_variables <-
+      context$model$data %>% dplyr::select(starts_with("u_")) %>% names()
+    updateSelectizeInput(session,
+                         "utility-variables",
+                         selected = context$model$utility_variables)
+    
+    context$model$probability_variables <-
+      context$model$data %>% dplyr::select(starts_with("p_")) %>% names()
+    updateSelectizeInput(session,
+                         "probability-variables",
+                         selected = context$probability_variables)
+    
+    context$model$relative_effectiveness_variables <-
+      context$model$data %>% dplyr::select(starts_with("hr_") |
+                                             starts_with("rr_") | 
+                                             starts_with("rr")) %>% names()
+    updateSelectizeInput(session,
+                         "relative-effectiveness-variables",
+                         selected = context$relative_effectiveness_variables)
+    
     # context$relations$outcome_variable <- "inc_qaly"
     # context$relations$predictor_variables <- c(context$model$utility_variables, context$model$probability_variables) %>% setdiff(c("u_d", "p_dd"))
     
