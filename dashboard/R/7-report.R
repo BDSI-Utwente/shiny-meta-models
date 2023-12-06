@@ -18,6 +18,7 @@ downloadUI <- tabItem(
     width = 12,
     title = "Download report",
     p(
+      strong("THIS IS STILL WORK IN PROGRESS, USE AT YOUR OWN PERIL ;)"),
       "In this box, you can download a report contening the performed validation steps and the different plots you have generated.",
       br(),
       "Select which elements you would like to include in the generated report by using the checkboxes below.",
