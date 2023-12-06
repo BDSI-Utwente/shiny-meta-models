@@ -18,7 +18,19 @@ dataUI <- tabItem(
     title = "Upload data",
     p("Browse your computer to upload your data. The accepted format is '.csv'.", 
       br(),
-      strong("The first row of the dataset should contain the names of the inputs and outputs.")
+      strong("The first row of the dataset should contain the names of the inputs and outputs."),
+      br(),
+      "If you would like your variables to be automatically categorised, please ensure that the name of the variable starts with:",
+      br(),
+      "'c_' for costs inputs",
+      br(),
+      "'p_' for probabilities inputs",
+      br(),
+      "'u_' for utility values inputs",
+      br(),
+      "'disu_' for disutility values inputs",
+      br(),
+      "'rr_', 'hr_', or 'or_' for relative effectiveness inputs"
       ),
     width = 12,
     fileInput("model_file",
@@ -469,6 +481,8 @@ dataServer <- function(input, output, session, context) {
                                result$message,
                                "error")
       context$model$file$initialized <- FALSE
+      
+      
     } else {
       context$model$data <- result$result
       if (context$model$file$warnings %>% length() > 0) {
@@ -503,6 +517,39 @@ dataServer <- function(input, output, session, context) {
   
   updateModelVariables <- observe({
     context$model$variables <- names(context$model$data)
+    
+    # Fill in input categories
+    context$model$cost_variables <-
+      context$model$data %>% dplyr::select(starts_with("c_")) %>% names()
+    updateSelectizeInput(session,
+                         "cost-variables",
+                         selected = context$model$cost_variables)
+    
+    context$model$utility_variables <-
+      context$model$data %>% dplyr::select(starts_with("u_")) %>% names()
+    updateSelectizeInput(session,
+                         "utility-variables",
+                         selected = context$model$utility_variables)
+    
+    context$model$disutility_variables <-
+      context$model$data %>% dplyr::select(starts_with("disu_")) %>% names()
+    updateSelectizeInput(session,
+                         "disutility-variables",
+                         selected = context$model$disutility_variables)
+    
+    context$model$probability_variables <-
+      context$model$data %>% dplyr::select(starts_with("p_")) %>% names()
+    updateSelectizeInput(session,
+                         "probability-variables",
+                         selected = context$probability_variables)
+    
+    context$model$relative_effectiveness_variables <-
+      context$model$data %>% dplyr::select(starts_with("hr_") |
+                                             starts_with("rr_") | 
+                                             starts_with("or_")) %>% names()
+    updateSelectizeInput(session,
+                         "relative-effectiveness-variables",
+                         selected = context$relative_effectiveness_variables)
   }) %>% bindEvent(context$model$data)
   
   updateModelVariablesIncrementsNB <- observe({
