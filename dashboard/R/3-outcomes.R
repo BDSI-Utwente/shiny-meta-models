@@ -103,13 +103,26 @@ outcomesUI <- tabItem(
           )
         ),
         column(
-          width = 6,
+          width = 3,
           ### selectize/outcomes-ice-plane-colour-variable ----
           selectizeInput(
             "outcomes-ice-plane-colour-variable",
-            label = "Colour by",
+            label = "Colour ICE plane by",
             multiple = FALSE,
             choices = c()
+          )
+        ),
+        column(
+          width = 3,
+          ### select/outcomes-ice-currency ----
+          selectInput(
+            "outcomes-ice-currency",
+            label = "Currency",
+            choices = c("Euros" = "euro",
+                        "US Dollars" = "dollar",
+                        "Yen" = "yen",
+                        "None" = "none"),
+            selected = "Euro"
           )
         )
       ),
@@ -640,6 +653,23 @@ outcomesServer <- function(input, output, session, context) {
       input$`outcomes-comparator-total-undiscounted-costs`
   }) %>% bindEvent(input$`outcomes-comparator-total-undiscounted-costs`)
   
+  ### context$outcomes$wtp ----
+  context$outcomes$wtp <- reactive({
+    input$`outcomes-willingness-to-pay`
+  })
+ 
+  ### context$outcomes$n_it_highlight ----
+  context$outcomes$n_it_highlight <- reactive({
+    input$`outcomes-iterations-highlight`
+  })
+  
+  ### context$outcomes$col_ice ----
+  updateICEplaneColour <- observe({
+    context$outcomes$col_ice <-
+      input$`outcomes-ice-plane-colour-variable`
+  }) %>% bindEvent(input$`outcomes-ice-plane-colour-variable`)
+  
+  
   ## SERVER update reactive ----
   
   ### debounce rapidly changing inputs ----
@@ -653,9 +683,12 @@ outcomesServer <- function(input, output, session, context) {
     }) %>% debounce(500),
     wtp = reactive({
       input$`outcomes-willingness-to-pay`
+    }) %>% debounce(500),
+    currency = reactive({
+      input$`outcomes-ice-currency`
     }) %>% debounce(500)
   )
-  
+
   wtp <- list(
     min = reactive({
       input$`outcomes-ceac-wtp-min`
@@ -770,7 +803,7 @@ outcomesServer <- function(input, output, session, context) {
         } else{
           NULL
         }
-      
+    
       pacheck::plot_ice(
         df = context$model$data_filtered() %>% as.data.frame(),
         e_int = context$outcomes$intervention_total_discounted_qalys,
@@ -778,8 +811,9 @@ outcomesServer <- function(input, output, session, context) {
         e_comp = context$outcomes$comparator_total_discounted_qalys,
         c_comp = context$outcomes$comparator_total_discounted_costs,
         col = user$colour,
-        n_it = user$n_it,
-        wtp = ice$wtp()
+        n_it = as.numeric(user$n_it),
+        wtp = ice$wtp(),
+        currency = ice$currency()
       )
     }
   })

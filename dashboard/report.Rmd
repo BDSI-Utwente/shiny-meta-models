@@ -4,8 +4,32 @@ output: word_document
 params:
   person: NA
   df_pacboard: NULL
+  cost_variables: ""
+  utility_variables: ""
+  disutility_variables: ""
+  probability_variables: ""
+  relative_effectiveness_variables: ""
+  intervention_total_discounted_qalys: ""
+  intervention_total_discounted_costs: ""
+  comparator_total_discounted_qalys: ""
+  comparator_total_discounted_costs: ""
+  intervention_total_undiscounted_qalys: ""
+  intervention_total_undiscounted_costs: ""
+  comparator_total_undiscounted_qalys: ""
+  comparator_total_undiscounted_costs: ""
   summary_stats: TRUE
   corr_matrix: TRUE
+  validation_checks_choice: TRUE
+  ce_plot_choice: TRUE
+  ice_plot_choice: TRUE
+  ice_summary_choice: TRUE
+  ceac_plot_choice: TRUE
+  col_ice: ""
+  n_it_highlight: NULL
+  wtp_ice: NULL
+  ceac_min: 0 
+  ceac_max: 100000
+  ceac_step: 5000
 ---
 
 ```{r setup, include=FALSE}
@@ -14,28 +38,47 @@ require(pacheck)
 require(dplyr)
 require(tidyr)
 require(ggplot2)
+require(purrr)
+require(magrittr)
 ```
 
 # Introduction
 This report has been generated on `r Sys.Date()``r ifelse(params$person != '', paste0(" by ", params$person, "."), ".")`  
 
 `r if(params$summary_stats == TRUE) {paste("# Summary uploaded data")}`
-```{r}
+```{r summ}
 if(is.data.frame(params$df_pacboard)) {
   if(params$summary_stats == TRUE) {
-    knitr::kable(
-      as.data.frame(
-        pacheck::generate_sum_stats(params$df_pacboard)
-        )
+    variables <- c(
+      params$cost_variables,
+      params$utility_variables,
+      params$disutility_variables,
+      params$probability_variables,
+      params$relative_effectiveness_variables,
+      params$intervention_total_discounted_qalys,
+      params$intervention_total_discounted_costs,
+      params$comparator_total_discounted_qalys,
+      params$comparator_total_discounted_costs
     )
-  }
+    variables <- variables[which(variables != "")] # selection of variables for summary stats depending on non-empty selection
+    
+    if(length(variables) < 1) {
+      paste0("There are no variables selected.")
+    } else {    
+      knitr::kable(
+        as.data.frame(
+          pacheck::generate_sum_stats(params$df_pacboard %>%
+                                        dplyr::select(!!!variables))
+        ))
+      }
+    }
 } else {
-    print("No data has been uploaded to PACBOARD")
+    print("No data has been uploaded to PACBOARD.")
   }
 ```
 
 `r if(params$corr_matrix == TRUE) {paste("# Correlation matrix")}`
-```{r}
+```{r corr}
 if(is.data.frame(params$df_pacboard)) {
   if(params$corr_matrix == TRUE) {
      invalid_cols_non_numeric <- params$df_pacboard %>%
@@ -71,4 +114,291 @@ if(is.data.frame(params$df_pacboard)) {
 ```
 
 
+`r if(params$validation_checks_choice == TRUE) {paste("# Validation checks")}`
 
+`r if(params$validation_checks_choice == TRUE & params$probability_variables %>% length()) {paste("## Probabilities")}`
+```{r validation_probs, warning = FALSE}
+if(params$validation_checks_choice == TRUE &
+   params$probability_variables %>% length()) {
+  valid_probs_pos <- pacheck::do_check(
+    params$df_pacboard,
+    params$probability_variables,
+    ~ .x >= 0,
+    "positive",
+    "all probabilities are {label_check}"
+  )
+  valid_probs_lt1 <- pacheck::do_check(
+    params$df_pacboard,
+    params$probability_variables,
+    ~ .x <= 1,
+    "lower or equal to 1",
+    "all probabilities are {label_check}"
+  )
+  
+   msg_probs <- paste(valid_probs_pos$messages$message,
+                      valid_probs_lt1$messages$message,
+                      sep = "\n"
+                      )
+   cat(msg_probs)
+}
+```
+
+`r if(params$validation_checks_choice == TRUE & params$utility_variables %>% length()) {paste("## Utilities")}`
+```{r validation_utils, warning = FALSE}
+if(params$validation_checks_choice == TRUE &
+   params$utility_variables %>% length()) {
+  valid_utils_pos <- pacheck::do_check(
+    params$df_pacboard,
+    params$utility_variables,
+    ~ .x >= 0,
+    "positive",
+    "all utility values are {label_check}"
+  )
+  valid_utils_lt1 <- pacheck::do_check(
+    params$df_pacboard,
+    params$utility_variables,
+    ~ .x <= 1,
+    "lower or equal to 1",
+    "all utility values are {label_check}"
+  )
+  
+  msg_utils <- paste(valid_utils_pos$messages$message,
+                     valid_utils_lt1$messages$message,
+                     sep = "\n"
+                     )
+  cat(msg_utils)
+}
+```
+
+`r if(params$validation_checks_choice == TRUE & params$disutility_variables %>% length()) {paste("## Disutilities")}`
+```{r validation_disutils, warning = FALSE}
+if(params$validation_checks_choice == TRUE &
+   params$disutility_variables %>% length()) {
+  valid_disutils_neg <- pacheck::do_check(
+    params$df_pacboard,
+    params$disutility_variables,
+    ~ .x < 0,
+    "negative",
+    "all disutility values are {label_check}"
+  )
+  valid_disutils_neg$messages$message
+  }
+```
+
+`r if(params$validation_checks_choice == TRUE & params$cost_variables %>% length()) {paste("## Costs")}`
+```{r validation_costs, warning = FALSE}
+if(params$validation_checks_choice == TRUE &
+   params$cost_variables %>% length()) {
+  valid_costs <- pacheck::do_check(params$df_pacboard,
+                                   params$cost_variables,
+                                   ~.x >= 0,
+                                   "positive",
+                                   "all costs are {label_check}")
+  valid_costs$messages$message
+}
+```
+
+`r if(params$validation_checks_choice == TRUE & params$relative_effectiveness_variables %>% length()) {paste("## Relative effectiveness")}`
+```{r validation_relative_effectiveness, warning = FALSE}
+if(params$validation_checks_choice == TRUE &
+   params$relative_effectiveness_variables %>% length()) {
+  valid_relative_effectiveness <- pacheck::do_check(
+    params$df_pacboard,
+    params$relative_effectiveness_variables,
+    ~ .x >= 0,
+    "positive",
+    "all relative effectiveness values are {label_check}"
+  )
+  valid_relative_effectiveness$messages$message
+}
+```
+
+`r if(params$validation_checks_choice == TRUE & params$intervention_total_discounted_qalys != "" & params$comparator_total_discounted_qalys != "") {paste("## Outcomes: total discounted QALYs")}`
+```{r validation_t_qalys, warning = FALSE}
+msg_qalys <- c()
+if(params$validation_checks_choice == TRUE &
+   params$intervention_total_discounted_qalys != "" &
+   params$comparator_total_discounted_qalys != "") {
+  valid_qalys_int <- pacheck:::do_check(
+    params$df_pacboard,
+    params$intervention_total_discounted_qalys,
+    ~ .x > 0,
+    "positive",
+    "total discounted QALYs are {label_check} for the intervention"
+  )
+  valid_qalys_comp <- pacheck:::do_check(
+    params$df_pacboard,
+    params$comparator_total_discounted_qalys,
+    ~ .x > 0,
+    "positive",
+    "total discounted QALYs are {label_check} for the comparator"
+  )
+  
+  msg_qalys <- paste(valid_qalys_int$messages$message,
+                     valid_qalys_comp$messages$message,
+                     sep = "\n")
+}
+if(params$validation_checks_choice == TRUE &
+   params$intervention_total_discounted_qalys != "" &
+   params$intervention_total_undiscounted_qalys != "") {
+  valid_disc_qalys_int <- pacheck:::do_check(
+        params$df_pacboard,
+        params$intervention_total_discounted_qalys,
+        ~ .x < params$df_pacboard[, params$intervention_total_undiscounted_qalys],
+        "lower than undiscounted QALYs",
+        "discounted QALYs are {label_check} for the intervention"
+      )
+    msg_qalys <- paste(msg_qalys,
+                       valid_disc_qalys_int$messages$message,
+                       sep = "\n")
+}
+if(params$validation_checks_choice == TRUE &
+   params$comparator_total_discounted_qalys != "" &
+   params$comparator_total_undiscounted_qalys != "") {
+  valid_disc_qalys_comp <- pacheck:::do_check(
+        params$df_pacboard,
+        params$comparator_total_discounted_qalys,
+        ~ .x < params$df_pacboard[, params$comparator_total_undiscounted_qalys],
+        "lower than undiscounted QALYs",
+        "discounted QALYs are {label_check} for the comparator"
+      )
+    msg_qalys <- paste(msg_qalys,
+                       valid_disc_qalys_comp$messages$message,
+                       sep = "\n")
+    }
+cat(msg_qalys)
+```
+
+`r if(params$validation_checks_choice == TRUE & params$intervention_total_discounted_costs != "" & params$comparator_total_discounted_costs != "") {paste("## Outcomes: total discounted costs")}`
+```{r validation_t_costs, warning = FALSE}
+msg_costs <- c()
+if(params$validation_checks_choice == TRUE &
+   params$intervention_total_discounted_costs != "" &
+   params$comparator_total_discounted_costs != ""
+   ) {
+  valid_costs_int <- pacheck:::do_check(
+    params$df_pacboard,
+    params$intervention_total_discounted_costs,
+    ~ .x > 0,
+    "positive",
+    "total discounted costs are {label_check} for the intervention"
+  )
+  valid_costs_comp <- pacheck:::do_check(
+    params$df_pacboard,
+    params$comparator_total_discounted_costs,
+    ~ .x > 0,
+    "positive",
+    "total discounted costs are {label_check} for the comparator"
+  )
+  msg_costs <- paste(valid_costs_int$messages$message,
+                     valid_costs_comp$messages$message,
+                     sep = "\n")
+}
+if(params$validation_checks_choice == TRUE &
+   params$intervention_total_discounted_costs != "" &
+   params$intervention_total_undiscounted_costs != "") {
+  valid_disc_costs_int <- pacheck:::do_check(
+        params$df_pacboard,
+        params$intervention_total_discounted_costs,
+        ~ .x < params$df_pacboard[, params$intervention_total_undiscounted_costs],
+        "lower than undiscounted costs",
+        "discounted costs are {label_check} for the intervention"
+      )
+    msg_costs <- paste(msg_costs,
+                       valid_disc_costs_int$messages$message,
+                       sep = "\n")
+}
+if(params$validation_checks_choice == TRUE &
+   params$comparator_total_discounted_costs != "" &
+   params$comparator_total_undiscounted_costs != "") {
+  valid_disc_costs_comp <- pacheck:::do_check(
+        params$df_pacboard,
+        params$comparator_total_discounted_costs,
+        ~ .x < params$df_pacboard[, params$comparator_total_undiscounted_costs],
+        "lower than undiscounted costs",
+        "discounted costs are {label_check} for the comparator"
+      )
+    msg_costs <- paste(msg_costs,
+                       valid_disc_costs_comp$messages$message,
+                       sep = "\n")
+    }
+cat(msg_costs)
+```
+
+`r if(params$ce_plot_choice == TRUE) {paste("# Cost-effectiveness plane")}`
+```{r ce}
+if (
+  params$ce_plot_choice == TRUE &
+  params$intervention_total_discounted_qalys != "" &
+  params$intervention_total_discounted_costs != "" &
+  params$comparator_total_discounted_qalys != "" &
+  params$comparator_total_discounted_costs != ""
+) {
+  pacheck::plot_ce(
+    df = params$df_pacboard,
+    e_int = params$intervention_total_discounted_qalys,
+    c_int = params$intervention_total_discounted_costs,
+    e_comp = params$comparator_total_discounted_qalys,
+    c_comp = params$comparator_total_discounted_costs
+  )
+}
+```
+
+`r if(params$ice_plot_choice == TRUE | params$ice_summary_choice == TRUE ) {paste("# Incremental cost-effectiveness plane and summary")}`
+```{r ice}
+if(params$ice_plot_choice == TRUE &
+   params$intervention_total_discounted_qalys != "" &
+   params$intervention_total_discounted_costs != "" &
+   params$comparator_total_discounted_qalys != "" &
+   params$comparator_total_discounted_costs != "") {
+  pacheck::plot_ice(df = params$df_pacboard,
+                    e_int = params$intervention_total_discounted_qalys,
+                    c_int = params$intervention_total_discounted_costs,
+                    e_comp = params$comparator_total_discounted_qalys,
+                    c_comp = params$comparator_total_discounted_costs,
+                    col = if(params$col_ice == "") {NULL} else {params$col_ice},
+                    n_it = if(exists("params$n_it_highlight")) {as.numeric(params$n_it_highlight)} else {NULL},
+                    wtp = params$wtp_ice
+  )
+}
+  if (params$ice_summary_choice == TRUE &
+      params$intervention_total_discounted_qalys != "" &
+      params$intervention_total_discounted_costs != "" &
+      params$comparator_total_discounted_qalys != "" &
+      params$comparator_total_discounted_costs != "") {
+    knitr::kable(
+      pacheck::summary_ice(
+        df = params$df_pacboard,
+        e_int = params$intervention_total_discounted_qalys,
+        c_int = params$intervention_total_discounted_costs,
+        e_comp = params$comparator_total_discounted_qalys,
+        c_comp = params$comparator_total_discounted_costs
+      ),
+      caption = "Proportion of iterations in each quadrant"
+    )
+  }
+```
+
+`r if(params$ceac_plot_choice == TRUE) {paste("# Cost-effectiveness acceptability curve")}`
+```{r ceac}
+    if (params$ceac_plot_choice == TRUE &
+        params$intervention_total_discounted_qalys != "" &&
+        params$intervention_total_discounted_costs != "" &&
+        params$comparator_total_discounted_qalys != "" &&
+        params$comparator_total_discounted_costs != "") {
+      ceac_inputs <- pacheck::calculate_ceac(
+        df = params$df_pacboard,
+        e_int = params$intervention_total_discounted_qalys,
+        c_int = params$intervention_total_discounted_costs,
+        e_comp = params$comparator_total_discounted_qalys,
+        c_comp = params$comparator_total_discounted_costs,
+        v_wtp = seq(
+          from = params$ceac_min,
+          to = params$ceac_max,
+          by = params$ceac_step
+        )
+      )
+      pacheck::plot_ceac(df = ceac_inputs,
+                         wtp = "WTP_threshold")
+    }
+```
