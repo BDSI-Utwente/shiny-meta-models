@@ -5,7 +5,7 @@ account: bdsi
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 6073162
-bundleId: 7732989
+bundleId: 8385453
 url: https://bdsi.shinyapps.io/pacboard/
 asMultiple: FALSE
 asStatic: FALSE

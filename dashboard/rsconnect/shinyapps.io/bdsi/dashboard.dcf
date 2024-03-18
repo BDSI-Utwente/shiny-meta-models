@@ -5,7 +5,7 @@ account: bdsi
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 9912124
-bundleId: 8384839
+bundleId: 8385005
 url: https://bdsi.shinyapps.io/dashboard/
 version: 1
 asMultiple: FALSE
